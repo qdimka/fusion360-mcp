@@ -15,9 +15,11 @@ Use these steps when an AI coding agent installs the server for you.
 1. Check the platform where Fusion 360 is running.
 2. Install the add-in for that Fusion host:
 
-   **macOS** (reference Python add-in):
+   **macOS** (reference Python add-in; clone it once from the repository root):
 
    ```bash
+   mkdir -p reference
+   git clone https://github.com/faust-machines/fusion360-mcp-server reference/fusion360-mcp-server
    ./scripts/install-addon.sh
    ```
 
@@ -47,8 +49,9 @@ Use these steps when an AI coding agent installs the server for you.
 
      ```bash
      docker build -t fusion360-mcp:local .
-     docker run --rm -i -v fusion360-mcp-journal:/data \
-       fusion360-mcp:local --mode socket
+     docker run --rm -i -e FUSION_MCP_HOST=host.docker.internal \
+       -e FUSION_MCP_PORT=9876 -e FUSION_MCP_JOURNAL_DIR=/data \
+       -v fusion360-mcp-journal:/data fusion360-mcp:local --mode socket
      ```
 
 6. Configure the MCP client to launch the server over stdio. For Claude Code:

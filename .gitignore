@@ -22,3 +22,7 @@ __pycache__/
 
 ## adsk install artifacts (the .dll assemblies themselves ARE committed, D3 — don't ignore them)
 thirdparty/adsk/**/*.pdb
+
+## macOS Finder metadata
+.DS_Store
+docs/assets/demo.mov

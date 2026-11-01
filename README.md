@@ -1,10 +1,14 @@
 # Fusion360 MCP Server (C#)
 
+![CAD generation example in Fusion 360](docs/assets/demo.gif)
+
+*Example of CAD generation with Fusion360 MCP (accelerated playback).*
+
 *An MCP server that connects AI agents (Claude Code, Cursor, and any MCP client) to Autodesk Fusion 360 for CAD automation. This project is inspired by [Kompas3D-MCP](https://github.com/SergeySklyarov/Kompas3D-MCP) and is a C# port of the reference Python project [fusion360-mcp-server](https://github.com/faust-machines/fusion360-mcp-server).*
 
 > **Beta** — under active development. The API and tool behavior may change between releases.
 
-The server exposes **92 typed MCP tools**. The arbitrary `execute_code` tool from the Python reference is intentionally excluded; the add-in has 93 commands, including its internal `ping` health check.
+The server exposes **92 typed MCP tools**, including `ping` for a connection health check. The arbitrary `execute_code` tool from the Python reference is intentionally excluded.
 
 ## How it works
 
@@ -49,8 +53,9 @@ For a Docker installation, the MCP client should launch the container directly:
 
 ```bash
 docker build -t fusion360-mcp:local .
-docker run --rm -i -v fusion360-mcp-journal:/data \
-  fusion360-mcp:local --mode socket
+docker run --rm -i -e FUSION_MCP_HOST=host.docker.internal \
+  -e FUSION_MCP_PORT=9876 -e FUSION_MCP_JOURNAL_DIR=/data \
+  -v fusion360-mcp-journal:/data fusion360-mcp:local --mode socket
 ```
 
 On macOS, install the reference Python add-in with `./scripts/install-addon.sh` for a real Fusion connection; `--mode mock` is also available.
@@ -61,14 +66,22 @@ On macOS, install the reference Python add-in with `./scripts/install-addon.sh` 
 
 Choose the installer for the Fusion host platform:
 
-- **macOS:** run `./scripts/install-addon.sh`. This installs the reference
-  Python add-in from `reference/fusion360-mcp-server/addon` as a development
-  symlink. It speaks the same `:9876` protocol as this server.
+- **macOS:** clone the reference add-in as described below, then run
+  `./scripts/install-addon.sh`. This installs the Python add-in as a development
+  symlink. It speaks the same `:9876` protocol, but is not the C# add-in.
 - **Windows:** run `powershell -ExecutionPolicy Bypass -File scripts\install-addon.ps1`.
   This builds and installs the C# add-in. Use `-Symlink` for development.
 
 The C# add-in targets .NET Framework 4.8 and runs only in Fusion for Windows.
 Fusion for macOS needs the Python add-in, so the C# installer is not used there.
+
+From the repository root, prepare the reference add-in before installing it:
+
+```bash
+mkdir -p reference
+git clone https://github.com/faust-machines/fusion360-mcp-server reference/fusion360-mcp-server
+./scripts/install-addon.sh
+```
 
 The Windows installer excludes the compile-time stub `adsknet.dll` and Roslyn DLLs left by older incremental builds; Fusion provides adsknet at runtime.
 
@@ -145,12 +158,14 @@ The MCP client must run the container in stdio mode. For example, the command to
 client configurations:
 
 ```bash
-docker run --rm -i -v fusion360-mcp-journal:/data ghcr.io/OWNER/REPOSITORY:latest --mode socket
+docker run --rm -i -e FUSION_MCP_HOST=host.docker.internal \
+  -e FUSION_MCP_PORT=9876 -e FUSION_MCP_JOURNAL_DIR=/data \
+  -v fusion360-mcp-journal:/data ghcr.io/OWNER/REPOSITORY:latest --mode socket
 ```
 
-By default, the container connects to `host.docker.internal:9876` and stores
-log `operation_id` in `/data`. Docker volume `fusion360-mcp-journal`
-saves the log between runs. For a different add-in address, set the
+These options connect to `host.docker.internal:9876` and store the
+`operation_id` journal in `/data`. Docker volume `fusion360-mcp-journal`
+saves it between runs. For a different add-in address, set the
 `FUSION_MCP_HOST` and if necessary `FUSION_MCP_PORT` via `-e`.
 The container is started by the MCP client itself: the server communicates via stdin/stdout,
 so it should not be run in detached mode.
@@ -188,7 +203,8 @@ FUSION_MCP_HOST=192.168.1.42 /path/to/Fusion360.Mcp.Server --mode socket
 
 ### 3. Verify the connection
 
-Call the tool `ping` from the client. If `{"ok": true, "status": "pong"}` is returned, the connection is ready.
+Call `ping` from the client. A successful result contains `status: pong`;
+this confirms that the add-in connection is ready.
 
 ### Uninstall
 

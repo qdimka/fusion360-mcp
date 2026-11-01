@@ -14,7 +14,7 @@ How to build and run the MCP server in Docker on this machine
 - The `.NET 4.8` Add-in and the `adsknet.dll` compile stub are **not** in the
   image — they live inside Fusion on the host. `.dockerignore` excludes
   `thirdparty/` accordingly.
-- The 93-tool catalog is embedded in the `Fusion360.Mcp.Core` assembly
+- The 92-tool catalog is embedded in the `Fusion360.Mcp.Core` assembly
   (`tools_catalog.json`), so `tools/list` works with no add-in connected.
 
 ## Build
@@ -37,6 +37,7 @@ The client **attaches the process's stdio**. For Docker that means
 docker run -i --rm \
   -e FUSION_MCP_HOST=host.docker.internal \
   -e FUSION_MCP_PORT=9876 \
+  -e FUSION_MCP_JOURNAL_DIR=/data -v fusion360-mcp-journal:/data \
   fusion360-mcp
 
 # Mock mode (no Fusion needed — answers from Core's mock data)
@@ -92,7 +93,7 @@ Pipe an `initialize` + `tools/list` over stdin. One JSON-RPC record per line
 ```
 
 Expected: an `initialize` result (serverInfo) followed by a `tools/list`
-result containing the full 93-tool catalog.
+result containing the full 92-tool catalog.
 
 > **Note — keep stdin open.** The server is a stdio process that exits the
 > moment stdin hits EOF. If you close stdin immediately (a bare `printf |`
