@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- Compile-time stand-in for the adsk .NET API (PLAN.md D3).
+         Rebuild with:
+           dotnet build thirdparty/adsk/stubs/adsknet.csproj -c Release -o thirdparty/adsk
+         The produced thirdparty/adsk/adsknet.dll is committed so the AddIn
+         project's glob reference compiles on any host without a Fusion
+         install. See thirdparty/adsk/README.md. Not part of Fusion360Mcp.sln
+         on purpose: the AddIn consumes the committed DLL through its glob,
+         and the stub must never flow into the add-in's build output. -->
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AssemblyName>adsknet</AssemblyName>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+
+</Project>

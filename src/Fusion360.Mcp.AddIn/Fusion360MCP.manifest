@@ -1,0 +1,11 @@
+{
+  "autodeskProduct": "Fusion360",
+  "type": "addin",
+  "id": "381d6f4f-0948-4acf-8974-fa9908d34b2a",
+  "author": "fusion360-mcp",
+  "description": {"": "Fusion360MCP bridge add-in: TCP socket server on :9876 + main-thread command dispatch"},
+  "version": "1.0.0",
+  "runOnStartup": true,
+  "supportedOS": "windows",
+  "editEnabled": true
+}

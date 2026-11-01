@@ -1,0 +1,24 @@
+## build output
+bin/
+obj/
+
+## publish artifacts (scripts/publish.sh)
+dist/
+
+## IDE
+.vs/
+*.user
+
+## local kanban worktrees (shared with the main checkout)
+.worktrees/
+
+## local Python reference clone (PLAN.md: gitignored, kept out of CI artifacts)
+## bare `reference` covers git worktrees where it's a symlink to the main checkout
+reference
+reference/
+
+## Python script bytecode
+__pycache__/
+
+## adsk install artifacts (the .dll assemblies themselves ARE committed, D3 — don't ignore them)
+thirdparty/adsk/**/*.pdb

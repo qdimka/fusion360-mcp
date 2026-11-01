@@ -1,0 +1,26 @@
+# VCS
+.git
+.gitignore
+
+# Build output
+bin/
+obj/
+dist/
+
+# The adsk compile stub is reference-only for the net48 Add-in;
+# the stdio server image needs neither it nor the Add-in.
+thirdparty/
+
+# Local dev / kanban worktrees
+.worktrees/
+reference/
+reference
+
+# IDE / OS noise
+.vs/
+.idea/
+*.user
+.DS_Store
+
+# Docs are not shipped in the image
+docs/

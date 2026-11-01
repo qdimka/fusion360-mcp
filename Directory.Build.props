@@ -1,0 +1,21 @@
+<Project>
+
+  <!-- T1 scaffold (PLAN.md D8): C# latest, nullable, warnings-as-errors.
+       Shared by all projects in the solution. -->
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!-- P6 governance (docs/GOVERNANCE.md): single version for the solution;
+         semver decided by the MCP contract (release table). -->
+    <Version>0.1.0</Version>
+  </PropertyGroup>
+
+  <!-- D3: allow building net48 targets on non-Windows hosts (ubuntu CI, macOS dev).
+       Reference-only package; no runtime impact on Windows. -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+  </ItemGroup>
+
+</Project>

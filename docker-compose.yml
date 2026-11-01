@@ -1,0 +1,23 @@
+# fusion360-mcp — stdio MCP server bridging MCP clients to the Fusion 360 add-in.
+#
+# The service is a stdio process: an MCP client (Claude Code, OpenCode, Hermes,
+# ...) launches `fusion360-mcp` and speaks JSON-RPC over its stdin/stdout.
+# The service itself opens no inbound ports. Its only network path is OUTBOUND:
+# container -> host.docker.internal:9876 (the add-in's TCP socket inside
+# Fusion 360 on the host). No `ports:` needed — see docs/DOCKER.md for
+# client-side usage. The compose service is a reference/CI artifact; most
+# clients run the image directly with `docker run -i` (or the binary).
+services:
+  fusion360-mcp:
+    build: .
+    image: fusion360-mcp:latest
+    # stdio transport: keep stdin open so an MCP client can attach and pipe
+    # JSON-RPC. `tty: false` keeps stdout a clean JSON-RPC stream (no
+    # terminal line-ending translation).
+    stdin_open: true
+    tty: false
+    environment:
+      FUSION_MCP_HOST: host.docker.internal
+      FUSION_MCP_PORT: "9876"
+    # No inbound ports: the MCP client attaches via stdio, and the container's
+    # only network need is outbound to the add-in on the host.
