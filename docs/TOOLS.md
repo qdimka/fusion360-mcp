@@ -1,4 +1,4 @@
-# Tool Listing — 92 tools
+# Tool Listing — 92 C# tools + reference Python tools
 
 > **Generated file — do not edit by hand.**
 >
@@ -106,3 +106,12 @@
 | `cam_list_operations` | CAM / Manufacturing | List operations within a setup | ✓ |  | ✓ |
 | `cam_get_operation_info` | CAM / Manufacturing | Get details about a specific operation (strategy, tool, parameters, toolpath status) | ✓ |  | ✓ |
 | `render_view` | Perception | Capture the active viewport as a PNG so you can visually verify the model. Pass a canonical view (iso/front/top/etc.) to reposition the camera first, or 'current' to keep it as is. Returns base64-encoded image bytes alongside metadata; the MCP server delivers it as an image content block. | ✓ |  | ✓ |
+
+## Reference Python tools (not exposed by the C# server)
+
+These tools are available in the upstream Python server/add-in and are
+not part of the C# server catalog above.
+
+| Tool | Group | Description |
+|---|---|---|
+| `execute_code` | Code Execution | Run arbitrary Python in Fusion 360. The last expression's value is returned (REPL-style). Pre-defined names: `app`, `ui`, `design`, `component`, `adsk`, `math`. |

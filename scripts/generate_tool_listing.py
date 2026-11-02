@@ -123,7 +123,7 @@ def build_markdown(catalog: list[dict]) -> str:
         raise ValueError(f"GROUPS entries absent from catalog: {stale}")
 
     lines = [
-        f"# Tool Listing — {len(catalog)} tools",
+        f"# Tool Listing — {len(catalog)} C# tools + reference Python tools",
         "",
         "> **Generated file — do not edit by hand.**",
         ">",
@@ -154,6 +154,17 @@ def build_markdown(catalog: list[dict]) -> str:
                     "✓" if ann.get("idempotentHint") else "",
                 )
             )
+    lines.extend([
+        "",
+        "## Reference Python tools (not exposed by the C# server)",
+        "",
+        "These tools are available in the upstream Python server/add-in and are",
+        "not part of the C# server catalog above.",
+        "",
+        "| Tool | Group | Description |",
+        "|---|---|---|",
+        "| `execute_code` | Code Execution | Run arbitrary Python in Fusion 360. The last expression's value is returned (REPL-style). Pre-defined names: `app`, `ui`, `design`, `component`, `adsk`, `math`. |",
+    ])
     lines.append("")
     return "\n".join(lines)
 

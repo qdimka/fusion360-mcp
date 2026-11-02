@@ -8,7 +8,7 @@
 
 > **Beta** — under active development. The API and tool behavior may change between releases.
 
-The server exposes **92 typed MCP tools**, including `ping` for a connection health check. The arbitrary `execute_code` tool from the Python reference is intentionally excluded.
+The C# server exposes **92 typed MCP tools**, including `ping` for a connection health check. The reference Python implementation also provides `execute_code`, which runs supplied Python code inside Fusion 360. That tool remains available when using the reference Python server/add-in; it is not part of this C# server's 92-tool catalog.
 
 ## How it works
 
