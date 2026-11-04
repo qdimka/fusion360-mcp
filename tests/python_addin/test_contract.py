@@ -255,6 +255,28 @@ class ContractTests(unittest.TestCase):
         self.assertEqual((0, 0, 0), (viewport.camera.target.x, viewport.camera.target.y, viewport.camera.target.z))
         self.assertEqual((20, 20, 20), (viewport.camera.eye.x, viewport.camera.eye.y, viewport.camera.eye.z))
 
+    def test_flat_pattern_uses_largest_planar_sheet_face(self):
+        handler = self.handler()
+        face_small = types.SimpleNamespace(area=1, geometry=types.SimpleNamespace(surfaceType=1))
+        face_large = types.SimpleNamespace(area=8, geometry=types.SimpleNamespace(surfaceType=1))
+        curved = types.SimpleNamespace(area=20, geometry=types.SimpleNamespace(surfaceType=2))
+        body = types.SimpleNamespace(isSheetMetal=True, faces=[face_small, curved, face_large])
+        calls = []
+        component = types.SimpleNamespace(flatPattern=None, createFlatPattern=lambda face:
+                                          calls.append(face) or types.SimpleNamespace(name="Flat1"))
+        handler._root = lambda: component
+        handler._body_by_name = lambda name: body
+        with patch.object(adsk.core, "SurfaceTypes", types.SimpleNamespace(PlaneSurfaceType=1), create=True):
+            result = handler.flat_pattern("Sheet")
+        self.assertEqual([face_large], calls)
+        self.assertEqual("Flat1", result["feature_name"])
+
+    def test_flat_pattern_rejects_non_sheet_body(self):
+        handler = self.handler()
+        handler._body_by_name = lambda name: types.SimpleNamespace(isSheetMetal=False)
+        with self.assertRaisesRegex(RuntimeError, "sheet metal"):
+            handler.flat_pattern("Solid")
+
     def test_bind_guard(self):
         validate_bind_host("localhost", None)
         validate_bind_host("127.0.0.1", None)

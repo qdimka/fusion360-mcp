@@ -3148,10 +3148,19 @@ class CommandHandler:
         root = self._root()
         body = self._body_by_name(body_name)
 
-        flat_patterns = root.features.flatPatternFeatures
-        inp = flat_patterns.createInput(body)
-        feat = flat_patterns.add(inp)
-        return {"feature_name": feat.name}
+        if not body.isSheetMetal:
+            raise RuntimeError(f"Body '{body_name}' is not a sheet metal body")
+        if root.flatPattern is not None:
+            raise RuntimeError("The component already has a flat pattern")
+        faces = [face for face in body.faces
+                 if face.geometry.surfaceType == adsk.core.SurfaceTypes.PlaneSurfaceType]
+        if not faces:
+            raise RuntimeError("Sheet metal body has no planar stationary face")
+        face = max(faces, key=lambda item: item.area)
+        pattern = root.createFlatPattern(face)
+        if pattern is None:
+            raise RuntimeError("Fusion failed to create the flat pattern")
+        return {"feature_name": pattern.name}
 
     def unfold(self, body_name: str, bend_indices: list = None):
         root = self._root()
