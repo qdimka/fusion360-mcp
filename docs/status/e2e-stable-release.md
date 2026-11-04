@@ -4,8 +4,8 @@ Status: pending
 Windows: deferred (post-release)
 macOS: pending
 Candidate version: 1.0.0
-Candidate source commit: pending
-Add-in SHA256: pending
+Candidate source commit: af7f8639aee59842a996b44203170bb75ce7c270
+Add-in SHA256: 1f20880ad5e368a9a0fe8c865f62ddc8b52c991830b8a32bce969f6632e38ed3
 Server win-x64 SHA256: pending
 Server osx-arm64 SHA256: pending
 
@@ -209,3 +209,45 @@ the flange. `flat_pattern {"body_name":"Body1","expected_revision":1,
 `FlatPattern1`, revision 2. The model was saved. These results confirm the
 calls completed on one macOS build, not measured dimensional verification or
 Windows compatibility. The full candidate matrix and Windows E2E remain pending.
+
+## Candidate smoke — 2026-11-05 (incomplete; not release evidence)
+
+Fusion on macOS responded to `ping` with `pong`. The installed add-in handler
+SHA-256 is `0c6a3d072dd395fb519b358a77f4b9717bf17413d69054570629725284a3797d`,
+matching the handler extracted from the candidate add-in zip. The candidate
+source is `af7f8639aee59842a996b44203170bb75ce7c270`; the local add-in zip SHA-256
+is `1f20880ad5e368a9a0fe8c865f62ddc8b52c991830b8a32bce969f6632e38ed3`.
+The live Fusion MCP server process could not be identified from this environment,
+so the running server has not been proven to be the candidate macOS archive.
+The candidate archives are local builds; Task 6's successful Actions artifact
+and cross-build hash comparison are still outstanding.
+
+On the named saved design `Codex MCP Release E2E af7f863 2026-11-05`, the
+connected endpoint began at revision 0. `create_sketch` (xy),
+`draw_rectangle` (4 × 2 cm), and `extrude` (1 cm, new body) succeeded at
+revisions 1–3. Exact replay of the extrude returned the recorded result at
+revision 3 without a second body. Reusing its operation ID with height 2
+returned `OPERATION_ID_CONFLICT`. A `create_sketch` request with revision 0
+returned `REVISION_CONFLICT` and `partial_effects: false`.
+
+`move_body` moved Body1 by +1 cm in X at revision 4; `create_box` added Body2
+at revision 5; `create_construction_plane` added Plane1 at revision 6;
+`set_color` set Body1 red at revision 7; `create_parameter` added
+`E2E_Length = 10 mm` at revision 8. A second sketch and rectangle were made
+at revisions 9–10; `patch_surface` created SurfacePatch1 at revision 11.
+`get_scene_info` confirmed three bodies, two sketches, four features and
+revision 11. `get_physical_properties` returned Body1 volume 8 cm³, area
+28 cm² and mass 0.0628 kg; `get_parameters` returned the 10 mm expression;
+`cam_list_setups` returned zero setups. `export_f3d` wrote
+`/private/tmp/fusion360mcp-e2e-af7f863.f3d`; `render_view` returned a 640 × 480
+PNG. The saved model is disposable and named as above.
+
+This run is incomplete. The active document was not an Assembly, so
+`create_component` with the required Assembly precondition has not been tested.
+Body1 is an ordinary extruded solid, so `flat_pattern` rejected it as not sheet
+metal; this is not a success-path test. The invalid-body `move_body` request
+returned `BODY_NOT_FOUND` with `outcome_unknown: true`; a subsequent scene read
+still showed revision 11 and the same three bodies. CAM toolpath creation,
+network opt-in, candidate server identity, journal restart on the candidate,
+the complete matrix, and Windows Fusion E2E remain outstanding. Keep
+`macOS: pending` and overall `Status: pending` until those release gates pass.

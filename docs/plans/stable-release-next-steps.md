@@ -136,7 +136,7 @@
 
 **Interfaces:** The candidate source commit, four server zips, one Python zip, and SHA-256 file downloaded from Task 6's successful Ubuntu CI run are immutable inputs for this run. The evidence checker consumes the completed record.
 
-- [ ] **Step 1: Record the Windows deferral.** Set `Windows: deferred (post-release)` and schedule the complete runbook on the published candidate for the first available Windows Fusion host.
+- [x] **Step 1: Record the Windows deferral.** `Windows: deferred (post-release)` is recorded; schedule the complete runbook on the published candidate for the first available Windows Fusion host.
 - [ ] **Step 2: Run the complete [runbook](../E2E-STATUS.md) on macOS** with the Task 6 candidate and server archive. Record all fields. Mark macOS `pass` only after all rows pass; document unsupported preview APIs as limitations.
 - [ ] **Step 3: Rerun after a defect.** If code or packaged files change, rebuild and rehash from a new commit, rerun affected macOS cases before release and Windows cases after release, and update the evidence commit/hash. Never carry a `pass` from an older candidate onto a new artifact without checking affected behavior.
 - [ ] **Step 4: Complete the evidence record.** Add `Candidate source commit`, `Candidate version`, `Add-in SHA256`, `Server win-x64 SHA256`, and the tested `Server osx-<rid> SHA256` to `docs/status/e2e-stable-release.md`; set `Status: pass` for publication when macOS and release gates pass and Windows is explicitly deferred. Run scripts/check_release_evidence.py against the built archives, then commit evidence and documentation. Keep the recorded source commit unchanged when the evidence commit changes only docs.
