@@ -138,3 +138,25 @@ expected. With opt-in, macOS returned `Can't assign requested address` for
 that loopback alias; the attempted test therefore did not verify an opt-in
 listener. No LAN listener was opened, so the trusted-network opt-in case
 remains pending.
+
+### Flat-pattern API fix and remaining flange limitation
+
+Source commit `b970207` replaces the nonexistent `flatPatternFeatures` call
+with `Component.createFlatPattern`, checks `isSheetMetal` and an existing flat
+pattern, and chooses the largest planar body face as the stationary face.
+Headless regressions cover face selection and rejecting non-sheet solids; the
+full Python suite passed 22 tests. The rebuilt add-in zip SHA-256 was
+`89114ec20b08d6c041f1980ac4b163e6daa9aa54869bc954e2bde351cae0d0af`.
+The installed handler matched the extracted archive. In Fusion 2706.1.17, a
+saved disposable design containing an ordinary thin solid rejected
+`flat_pattern` with `Body 'Body1' is not a sheet metal body`; scene and
+revision remained unchanged. The success path still needs a real sheet-metal
+body and live validation, including confirming stationary-face selection.
+
+Autodesk documents [`Component.createFlatPattern`](https://help.autodesk.com/cloudhelp/ENU/Fusion-360-API/files/fusion_Component_createFlatPattern.htm)
+as a released API. Its
+[`createEdgeFlangeInput`](https://help.autodesk.com/cloudhelp/ENU/Fusion-360-API/files/fusion_FlangeFeatures_createEdgeFlangeInput.htm)
+API is preview and Autodesk says not to distribute programs using it. The
+`create_flange` compatibility defect therefore remains unresolved; release
+remains blocked, and a preview-only exclusion must not be represented as a
+successful supported-tool test.
