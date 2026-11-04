@@ -10,6 +10,7 @@ import threading
 import time
 import types
 import unittest
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[2]
 os.environ["FUSION_MCP_LOG_DIR"] = tempfile.gettempdir()
@@ -242,6 +243,17 @@ class ContractTests(unittest.TestCase):
             client.close()
             thread.join(2)
             self.assertFalse(thread.is_alive())
+
+    def test_orient_camera_resolves_design_when_cam_product_is_active(self):
+        handler = self.handler()
+        handler.app.activeProduct = types.SimpleNamespace()  # CAM product
+        point = lambda x, y, z: types.SimpleNamespace(x=x, y=y, z=z)
+        viewport = types.SimpleNamespace(camera=types.SimpleNamespace())
+        with patch.object(adsk.core, "Point3D", types.SimpleNamespace(create=point), create=True), \
+             patch.object(adsk.core, "Vector3D", types.SimpleNamespace(create=point), create=True):
+            handler._orient_camera(viewport, ((1, 1, 1), (0, 0, 1)))
+        self.assertEqual((0, 0, 0), (viewport.camera.target.x, viewport.camera.target.y, viewport.camera.target.z))
+        self.assertEqual((20, 20, 20), (viewport.camera.eye.x, viewport.camera.eye.y, viewport.camera.eye.z))
 
     def test_bind_guard(self):
         validate_bind_host("localhost", None)

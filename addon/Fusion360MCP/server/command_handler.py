@@ -3817,8 +3817,7 @@ class CommandHandler:
         ``spec`` is ``(eye_dir, up_vec)`` from ``_VIEW_DIRS``.
         """
         eye_dir, up_vec = spec
-        design = self.app.activeProduct
-        root = design.rootComponent if design is not None else None
+        root = self._root()
 
         # Target is the model centroid (or origin if no bodies).
         target = adsk.core.Point3D.create(0.0, 0.0, 0.0)
