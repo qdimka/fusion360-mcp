@@ -30,10 +30,11 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
 import pathlib
 import re
 import sys
-from collections.abc import Iterator
+from collections.abc import Iterable, Iterator
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 BASELINE = ROOT / "scripts" / "check_guards_baseline.json"
@@ -103,9 +104,22 @@ def check_style(stats: dict, baseline: dict | None) -> list[str]:
     return failures + [f"WARN: {w}" for w in warnings]
 
 
-def check_doc_links() -> list[str]:
+def check_doc_links(paths: Iterable[pathlib.Path] | None = None) -> list[str]:
     failures = []
-    for doc in sorted(ROOT.glob("docs/**/*.md")):
+    if paths is None:
+        docs = set(ROOT.glob("docs/**/*.md"))
+        readme = ROOT / "README.md"
+        if readme.is_file():
+            docs.add(readme)
+        for directory, dirs, files in os.walk(ROOT):
+            dirs[:] = [name for name in dirs if name not in {
+                ".git", ".superpowers", ".worktrees", "reference", "dist", "bin", "obj", "__pycache__"
+            }]
+            docs.update(pathlib.Path(directory) / name for name in files
+                        if name in {"AGENTS.md", "CLAUDE.md", "GEMINI.md", "SKILL.md"})
+        paths = sorted(docs)
+    for doc in paths:
+        doc = pathlib.Path(doc)
         for i, line in enumerate(doc.read_text(encoding="utf-8", errors="replace").splitlines(), 1):
             if any(m in line for m in EXTERNAL_MARKERS):
                 continue
@@ -125,7 +139,8 @@ def check_doc_links() -> list[str]:
                 # doc-relative first, then repo-root relative (docs in subdirs
                 # may name root paths like 'docs/E2E-STATUS.md').
                 if not (doc.parent / target).is_file() and not (ROOT / target).is_file():
-                    failures.append(f"{doc.relative_to(ROOT)}:{i}: unresolvable link `{target}`")
+                    label = doc.relative_to(ROOT) if doc.is_relative_to(ROOT) else doc
+                    failures.append(f"{label}:{i}: unresolvable link `{target}`")
     return failures
 
 
