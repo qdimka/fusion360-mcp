@@ -39,7 +39,7 @@ public static class ProtocolCodec
         var root = new JsonObject
         {
             ["type"] = command.Command,
-            ["params"] = command.Params ?? new JsonObject(),
+            ["params"] = command.Params?.DeepClone() ?? new JsonObject(),
         };
 
         return root.ToJsonString();

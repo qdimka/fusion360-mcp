@@ -32,6 +32,16 @@ public class ProtocolCodecTests
     }
 
     [Fact]
+    public void Command_CanEncodeSameParametersForReadOnlyRetry()
+    {
+        var parameters = new JsonObject { ["name"] = "Body1" };
+        var first = CommandEnvelope.Create("get_object_info", parameters).Encode();
+        var retry = CommandEnvelope.Create("get_object_info", parameters).Encode();
+        Assert.Equal(first, retry);
+        Assert.Null(parameters.Parent);
+    }
+
+    [Fact]
     public void Command_WithoutParams_UsesEmptyObject()
     {
         var line = CommandEnvelope.Create("ping").Encode();
