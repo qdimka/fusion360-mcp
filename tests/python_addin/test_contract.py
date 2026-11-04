@@ -255,6 +255,48 @@ class ContractTests(unittest.TestCase):
         self.assertEqual((0, 0, 0), (viewport.camera.target.x, viewport.camera.target.y, viewport.camera.target.z))
         self.assertEqual((20, 20, 20), (viewport.camera.eye.x, viewport.camera.eye.y, viewport.camera.eye.z))
 
+    def test_create_flange_uses_preview_edge_input_and_radius_override(self):
+        handler = self.handler()
+        edge = object()
+        body = types.SimpleNamespace(isSheetMetal=True, edges=types.SimpleNamespace(item=lambda i: edge if i == 2 else None))
+        overrides, inputs = [], []
+        settings = types.SimpleNamespace(bendRadiusOverride=types.SimpleNamespace(
+            setOverride=lambda value: overrides.append(value) or True))
+        flanges = types.SimpleNamespace(
+            createEdgeFlangeInput=lambda edges, distance: inputs.append((edges, distance)) or settings,
+            add=lambda value: types.SimpleNamespace(name="Flange1") if value is settings else None)
+        handler._root = lambda: types.SimpleNamespace(features=types.SimpleNamespace(flangeFeatures=flanges))
+        handler._body_by_name = lambda name: body
+        values = types.SimpleNamespace(createByReal=lambda value: ("real", value),
+                                       createByString=lambda value: ("string", value))
+        with patch.object(adsk.core, "ValueInput", values, create=True):
+            result = handler.create_flange("Sheet", 2, height=2, angle=45, bend_radius=0.2)
+        self.assertEqual([([edge], ("real", 2))], inputs)
+        self.assertEqual(("string", "45 deg"), settings.angle)
+        self.assertEqual([("real", 0.2)], overrides)
+        self.assertEqual("Flange1", result["feature_name"])
+
+    def test_create_flange_rejects_failed_radius_override_before_add(self):
+        handler = self.handler()
+        body = types.SimpleNamespace(isSheetMetal=True, edges=types.SimpleNamespace(item=lambda _: object()))
+        settings = types.SimpleNamespace(bendRadiusOverride=types.SimpleNamespace(setOverride=lambda _: False))
+        added = []
+        flanges = types.SimpleNamespace(createEdgeFlangeInput=lambda *_: settings,
+                                        add=lambda inp: added.append(inp))
+        handler._root = lambda: types.SimpleNamespace(features=types.SimpleNamespace(flangeFeatures=flanges))
+        handler._body_by_name = lambda _: body
+        values = types.SimpleNamespace(createByReal=lambda value: value, createByString=lambda value: value)
+        with patch.object(adsk.core, "ValueInput", values, create=True):
+            with self.assertRaisesRegex(RuntimeError, "bend radius"):
+                handler.create_flange("Sheet", 0, bend_radius=0.2)
+        self.assertEqual([], added)
+
+    def test_create_flange_rejects_non_sheet_body(self):
+        handler = self.handler()
+        handler._body_by_name = lambda name: types.SimpleNamespace(isSheetMetal=False)
+        with self.assertRaisesRegex(RuntimeError, "sheet metal"):
+            handler.create_flange("Solid", 0)
+
     def test_flat_pattern_uses_largest_planar_sheet_face(self):
         handler = self.handler()
         face_small = types.SimpleNamespace(area=1, geometry=types.SimpleNamespace(surfaceType=1))

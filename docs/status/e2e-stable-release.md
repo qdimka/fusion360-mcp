@@ -160,3 +160,13 @@ API is preview and Autodesk says not to distribute programs using it. The
 `create_flange` compatibility defect therefore remains unresolved; release
 remains blocked, and a preview-only exclusion must not be represented as a
 successful supported-tool test.
+
+### Edge-flange preview implementation
+
+The project owner accepted the preview API risk. `create_flange` now uses
+`createEdgeFlangeInput` and applies the optional bend-radius override; it
+rejects non-sheet-metal bodies and reports when the API is unavailable.
+Autodesk introduced the preview API in October 2026 and warns it can change.
+Headless tests cover inputs, the override and its failure. A successful live
+run on a genuine sheet-metal body is still required; the earlier solid was not
+such a body. Windows remains untested.

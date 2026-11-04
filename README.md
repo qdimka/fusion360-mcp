@@ -216,3 +216,5 @@ this confirms that the add-in connection is ready.
 The complete, generated tool catalog is maintained in [`docs/TOOLS.md`](docs/TOOLS.md). It includes each tool name, group, description, read-only status, destructive behavior, and idempotency.
 
 > Tools marked **(2026+)** require a current Fusion 360 build with the corresponding API support.
+
+`create_flange` uses Autodesk's [preview edge-flange API](https://help.autodesk.com/cloudhelp/ENU/Fusion-360-API/files/fusion_FlangeFeatures_createEdgeFlangeInput.htm), introduced in October 2026. Autodesk warns that preview APIs may change and should not be used in distributed programs. This project accepts that compatibility risk; live validation on a genuine sheet-metal body remains pending.

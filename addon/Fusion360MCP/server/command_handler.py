@@ -3107,16 +3107,27 @@ class CommandHandler:
     ):
         root = self._root()
         body = self._body_by_name(body_name)
+        if not body.isSheetMetal:
+            raise RuntimeError(f"Body '{body_name}' is not a sheet metal body")
         edge = body.edges.item(edge_index)
+        if edge is None:
+            raise RuntimeError(f"Edge index {edge_index} is out of range")
 
         flanges = root.features.flangeFeatures
-        inp = flanges.createInput(edge, True)
+        if not hasattr(flanges, "createEdgeFlangeInput"):
+            raise RuntimeError("Edge flange preview API is unavailable in this Fusion version")
+        inp = flanges.createEdgeFlangeInput([edge], adsk.core.ValueInput.createByReal(height))
+        if inp is None:
+            raise RuntimeError("Fusion could not create an edge flange input")
         inp.angle = adsk.core.ValueInput.createByString(f"{angle} deg")
-        inp.height = adsk.core.ValueInput.createByReal(height)
-        if bend_radius:
-            inp.bendRadius = adsk.core.ValueInput.createByReal(bend_radius)
+        if bend_radius is not None:
+            override = inp.bendRadiusOverride
+            if override is None or not override.setOverride(adsk.core.ValueInput.createByReal(bend_radius)):
+                raise RuntimeError("Fusion could not apply the requested bend radius")
 
         feat = flanges.add(inp)
+        if feat is None:
+            raise RuntimeError("Fusion could not create the edge flange")
         return {"feature_name": feat.name, "height": height, "angle": angle}
 
     def create_bend(
