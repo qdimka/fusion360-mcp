@@ -1,7 +1,27 @@
-# Task: stable release with a Python Fusion add-in
+# Specification: stable release with a Python Fusion add-in
 
-Status: in progress. Related plan:
+Status: approved direction, implementation in progress. Related plan:
 [stable-release.md](../plans/stable-release.md).
+
+## Intent and decisions
+
+The first stable release should give Windows and macOS Fusion users one
+installable add-in with the same 92 typed MCP tools. The .NET server and its
+durable operation journal remain. This removes the platform split in which
+the C# add-in serves Windows and a separately sourced Python add-in serves
+macOS.
+
+The approaches considered were (1) keep two add-ins and maintain two behavior
+contracts, (2) ship the pinned Python add-in on both hosts while retaining the
+C# MCP server, and (3) replace both the add-in and server with upstream Python.
+The chosen approach is (2): it preserves the server's typed catalog and journal
+while making the Fusion component cross-platform. The C# add-in stays in source
+until the packaged Python replacement passes live checks on both hosts.
+
+Non-goals for this release are Linux Fusion support, adding `execute_code`,
+changing the 92 tool names or units, and TCP authentication. A release that
+silently drops Windows support, publishes without live evidence, or loses
+mutation journal data fails this specification even if local tests pass.
 
 ## Goal
 
@@ -22,13 +42,14 @@ and macOS, with the advertised 92-tool behavior verified on both platforms.
 
 ## Current state
 
-The server and catalog exist. A pinned Python add-in copy, headless contract
-tests, cross-platform installer scripts, and a release zip builder are now in
-the working tree. The C# add-in remains until the replacement passes live
-Windows and macOS checks. Windows Python add-in E2E evidence is still missing;
-the release evidence file is pending. CI changes and release packaging have
-not yet been exercised on GitHub runners. The working tree also contains
-timeout edits that predated this task; keep their provenance clear in review.
+Commit `1750af1` contains the pinned Python add-in, headless contract tests,
+both installer scripts, the release zip builder, and CI/release workflow
+changes. The C# add-in remains until the Python replacement passes live
+Windows and macOS checks. Both platform lines in the
+[evidence record](../status/e2e-stable-release.md) remain pending; a Windows
+Fusion host is not currently available. The changed workflows have not yet
+been exercised on GitHub runners. The commit also includes timeout edits that
+predated the release work; their provenance matters in review.
 
 ## Required behavior
 
@@ -194,8 +215,9 @@ installation from the release zip. The solution built with zero warnings.
 After the formatter fix, the C# server suite passed 84 tests; the Core suite
 passed 120 and the legacy add-in suite passed 186 before that formatter-only
 fix. The full publish script produced all four server archives, the Python
-add-in zip, and valid SHA-256 checksums. These checks used the working tree,
-not a release commit or live Fusion.
+add-in zip, and valid SHA-256 checksums. These checks were run before commit
+`1750af1`; that commit has not yet been exercised on a GitHub runner or in
+live Fusion.
 
 Before closing the task, record the release commit and candidate hashes, CI
 run, Windows and macOS Fusion versions, E2E commands and results, and defects
@@ -203,7 +225,7 @@ and reruns. Headless and unit checks do not satisfy the platform criterion.
 
 ## Next step
 
-Complete the compatibility inventory and remaining Python handler verification
-checks, run the installer jobs on GitHub runners, and execute the candidate
-E2E matrix in live Fusion on Windows and macOS. Remove the legacy C# add-in
-only after the replacement passes those gates.
+Follow the remaining tasks in the [implementation plan](../plans/stable-release.md):
+review the candidate, run the installer jobs on GitHub runners, and execute
+the E2E matrix in live Fusion on Windows and macOS. Remove the legacy C#
+add-in only after the replacement passes those gates.

@@ -1,107 +1,98 @@
-# Release readiness plan
+# Python Add-in Stable Release Implementation Plan
 
-Status: in progress. Target: first stable release of the C# MCP server with
-one Python Fusion add-in for Windows and macOS. This plan does not itself
-publish a release.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-## Goal and scope
+**Goal:** Release the .NET MCP server with one verified Python Fusion add-in for Windows and macOS, then retire the C# add-in and leave beta.
 
-Ship a reproducible server and add-in pair whose documented 92-tool MCP catalog
-matches actual add-in behavior on both supported Fusion hosts. Keep the C# MCP
-server and shared Core library. Retire the C# add-in, its test project, the
-compile-time adsk stub, and the Windows-only installer after the replacement
-passes the gates below. `execute_code` remains outside this server's catalog.
+**Architecture:** The .NET 10 server retains the typed tool catalog and durable `operation_id` journal. The checked-in Python add-in serves the same TCP contract through Fusion's main thread on both supported hosts. Live platform evidence gates removal of the legacy add-in and publication of a stable tag.
 
-The behavior to deliver is defined in the
-[release task](../tasks/python-addin-stable-release.md), the existing
-[tool contracts](../TOOL_CONTRACTS.md), and the generated
-[tool catalog](../TOOLS.md). If they disagree, resolve the discrepancy before
-marking a gate complete.
-The working [compatibility inventory](../status/python-addin-compatibility.md)
-records what has been checked and what still requires live evidence.
+**Tech Stack:** C#/.NET 10, Fusion Python API, Python 3.12 for headless CI, PowerShell, POSIX shell, GitHub Actions.
 
-## Work sequence
+**Spec:** [python-addin-stable-release.md](../tasks/python-addin-stable-release.md)
 
-| Phase | Work | Evidence required to finish |
-| --- | --- | --- |
-| 0. Baseline | Record the current commit and the pre-existing uncommitted timeout changes separately. Inventory the 92 tools, current C# add-in behaviors, Python add-in behaviors, installers, and release artifacts. Choose and record the Python upstream commit and its MIT license attribution. | A reviewed compatibility matrix and an explicit list of differences; no existing work overwritten. |
-| 1. Python add-in source | Put a pinned, reviewable copy of the Python add-in under this repository's version control. Apply project-specific changes there, with an update procedure that records the upstream commit and local patches. | A clean checkout contains the exact add-in source needed to install; no network clone is required at install time. |
-| 2. Contract parity | Implement or deliberately revise every advertised server/add-in contract: revisions and stale references, mutation diagnostics, verification, structured timeouts, operation IDs, and tool dispatch. Keep wire compatibility with the C# server. | Automated contract tests for the catalog and response shapes; regression tests for conflicts, timeout races, and partial effects. |
-| 3. Installation and security | Provide idempotent Windows PowerShell and macOS shell installers for the same Python package. Require explicit opt-in for non-loopback listening. Document upgrade and uninstall without deleting user designs or journal data. | Installer checks on both OSs, loopback/remote-bind checks, and a fresh-install walkthrough. |
-| 4. Retire C# add-in | Remove the C# add-in project and tests from the solution and CI only after phases 1–3 pass. Remove its source, installer, stub assemblies, and packaging references. Keep decision history, updating historical paths with a migration note where needed. | The solution builds from a clean checkout without `net48` or adsk assemblies; no active guide points to the removed add-in. |
-| 5. Release pipeline and docs | Make CI run Python unit/contract tests, C# tests, parity and guard checks, installer/package validation. Package the Python add-in zip and server binaries; attach artifacts to a release and publish the image from the same commit. Rewrite README, INSTALL, ARCHITECTURE, E2E runbook, tool contracts, and release notes. | A candidate release produces downloadable, installable artifacts with checksums; docs match those artifacts and commands. |
-| 6. Live validation | Run the E2E matrix in the release task against the candidate artifacts on Windows Fusion and macOS Fusion. Test normal operations and adverse cases using saved, named designs. | Recorded OS/Fusion versions, artifact hashes, commands, observed results, failures, and issue links. |
-| 7. Stable release | Fix release-blocking defects, repeat affected checks, freeze the candidate, approve notes, then publish the stable version (proposed `1.0.0`). | All release gates below pass on the release commit and tag; no untriaged blocker remains. |
+## Global Constraints
 
-## File change map
+- Keep the 92-tool names and parameter units defined in `src/Fusion360.Mcp.Core/Catalog/tools_catalog.json`; reject `execute_code`.
+- Use the pinned source under `addon/Fusion360MCP/`, including `addon/UPSTREAM.md` and the upstream MIT license. Installation must not fetch source.
+- Python bridge timeout: 300 seconds; C# TCP client timeout: 310 seconds; ping: 5 seconds. Do not retry a mutation with an unknown outcome.
+- Default listener: loopback port 9876. Non-loopback bind requires `FUSION_MCP_ALLOW_REMOTE=1`; TCP has no authentication.
+- Preserve the server operation journal and user designs during install, upgrade, and uninstall.
+- Require passing live Windows and macOS Fusion runs before deleting the C# add-in. A Windows Fusion host is not yet available.
+- The final E2E record must name the release commit, candidate version, server artifact and add-in SHA-256 values, OS/Fusion versions, commands, responses, and defects.
+- Do not publish a stable tag or claim support for a Fusion version on headless tests alone.
 
-Paths below are the intended implementation locations. New paths are proposed
-names; existing paths are current repository files. This map does not itself
-authorize removing the C# add-in before its replacement passes phases 1–3.
+## Review Focus
 
-| Path | Change | Phase |
-| --- | --- | --- |
-| addon/Fusion360MCP/Fusion360MCP.py, Fusion360MCP.manifest, server/*.py (new) | Add the pinned Python add-in source and upstream license/commit record. Extend dispatch, revision tracking, mutation diagnostics, timeout state transitions, and remote-bind guard. The directory is the package installed into Fusion on both OSs. | 1–3 |
-| addon/UPSTREAM.md, addon/LICENSE.upstream (new) | Record the upstream commit, license, copied files, and procedure for reviewing future updates. | 1 |
-| `src/Fusion360.Mcp.Core/Protocol/ProtocolConstants.cs`, `Fusion360Connection.cs`; `src/Fusion360.Mcp.Core/Errors/ErrorClassifier.cs` | Set the C# client budget and all timeout hints to the agreed Python bridge budget. Keep the wire format and tool names stable. Reconcile the pre-existing uncommitted edits to these files rather than replacing them. | 2 |
-| `src/Fusion360.Mcp.Server/OperationJournal.cs`, `IdempotentToolBackend.cs` | Align in-flight waiting and structured Python timeout handling with safe same-ID retry rules; change only where contract tests show a gap. | 2 |
-| `src/Fusion360.Mcp.Core/Catalog/tools_catalog.json`, `ToolEffects.cs`; `src/Fusion360.Mcp.Server/ResultFormatter.cs` | Keep the existing 92-tool schema and effect metadata unless parity reveals a false contract. Verify `expected_revision`, `operation_id`, and diagnostic fields through to MCP output. | 2 |
-| `scripts/check_tool_parity.py`, `generate_tool_catalog.py`, `generate_tool_listing.py` | Make the checked-in catalog and checked-in Python dispatch the release inputs. Remove the CI requirement for the ignored `reference/` clone. Keep an explicit, reviewed upstream import path for future catalog updates; regenerate `docs/TOOLS.md` only if the catalog changes. | 2, 5 |
-| `tests/python_addin/` (new); `tests/Fusion360.Mcp.Server.Tests/SocketModeServerTests.cs`, `IdempotentToolBackendTests.cs`, `OperationJournalTests.cs`; `tests/Fusion360.Mcp.Core.Tests/ProtocolTests.cs` | Add headless Python protocol/bridge/revision/security tests and C# tests for actual Python response frames, timeouts, and journal behavior. | 2–3 |
-| `scripts/install-addon.sh`, `scripts/install-addon.ps1` | Replace the reference symlink and C# build installers with release-package installation of the same Python add-in. Preserve the previous install on failure; allow an explicit development symlink mode. | 3 |
-| `src/Fusion360.Mcp.AddIn/`, `tests/Fusion360.Mcp.AddIn.Tests/`, `thirdparty/adsk/` | Delete after the Python replacement is verified. Port the contract assertions from the C# add-in tests into Python tests before deleting their source. | 4 |
-| `Fusion360Mcp.sln`, `Directory.Build.props`, `scripts/check_guards_baseline.json` | Remove the add-in projects and net48-only references/style debt. Change the shared version only at candidate/stable release time. | 4, 7 |
-| `.github/workflows/ci.yml`, `.github/workflows/docker.yml`, `scripts/publish.sh` | Run all checked-in C#/Python gates; package and attach server binaries and Python add-in zip with checksums; tie release/image publication to the validated commit rather than every version bump on `main`. | 5 |
-| `README.md`, `docs/INSTALL.md`, `docs/ARCHITECTURE.md`, `docs/TOOL_CONTRACTS.md`, `docs/DOCKER.md`, `docs/E2E-STATUS.md`, `docs/status/TECH_DEBT.md` | Describe one add-in, actual security and timeout behavior, migration, supported versions, test evidence, and remaining debt. Reconcile the already modified architecture and decision documents rather than overwriting them. | 5–6 |
-| `docs/decisions/*.md`, `docs/adr/*.md` | Keep historical decisions; add a short supersession/migration note where a document claims the retired C# implementation is current. | 5 |
-| `docs/STATUS.md`, `docs/GOVERNANCE.md` | Resolve the currently empty placeholders: either fill with accurate release status/governance and link them, or remove them and repair references. | 5 |
-| docs/status/e2e-stable-release.md (new) | Record the Windows and macOS candidate runs, environment, artifact hashes, commands, results, defects, and reruns. | 6 |
-| `Dockerfile`, `docker-compose.yml`, `src/Fusion360.Mcp.Server/Program.cs` | Retain unless packaging or integration checks expose a concrete mismatch; Docker carries only the C# server. | 5 |
+These are the most consequential inputs to check during Task 1 and the platform runs:
 
-The main deletion is deliberately late: first the replacement and its tests,
-then the old implementation and build references in one reviewable change.
+1. Malformed JSON, non-object requests, and a bad `params` value yield a structured error while the Python listener remains available. Add `test_socket_rejects_malformed_requests_and_recovers` in `tests/python_addin/test_contract.py`.
+2. A repeated `operation_id` with different arguments or a pending intent cannot execute a second mutation. Exercise `IdempotentToolBackendTests` and the live journal rows in the E2E runbook.
+3. An installer failure after staging leaves the previous add-in usable. Exercise a staged replacement failure in the Windows and macOS installer jobs.
+4. An export that fails after creating an external file is never reported as `partial_effects: false`. Add a Python handler test for an observed external effect and inspect the live export result.
+5. A Fusion process restart resets the Python revision counter while a server restart preserves journal decisions. Record both transitions separately in live evidence.
 
-## Release gates
+## Baseline already completed
 
-1. **Behavior:** All 92 advertised tools have a dispatch target and schema
-   check. The high-risk mutation, export, revision, timeout, and journal cases
-   in the release task pass. Unsupported Fusion preview APIs fail with a clear error.
-2. **Platforms:** A fresh install and saved-document E2E run pass on Windows
-   and macOS with the same packaged Python add-in. The server binary or Docker
-   image used in each run is identified by version and checksum.
-3. **Safety:** Remote bind is refused without opt-in; mutation retries after an
-   unknown outcome are refused; cancelled queued work cannot execute later.
-4. **Quality:** CI passes from a clean checkout. The release workflow does not
-   publish a stable tag before the full gate is satisfied. The release includes
-   server artifacts, add-in package, image tag, checksums, and notes.
-5. **Documentation:** The installation, upgrade, uninstall, troubleshooting,
-   tool catalog, and limitations have been followed by someone using only the
-   release artifacts and docs. No beta or C# add-in instructions remain in
-   current user guides.
+Commit `1750af1` contains the pinned Python add-in, installers, release packaging, CI/release workflow edits, and the [compatibility inventory](../status/python-addin-compatibility.md). Local checks before that commit passed: 12 Python headless tests, 92-tool dispatch/effect parity, docs guards, .NET build and tests, macOS repeat installation in a temporary AddIns directory, and checksums for four server archives plus the add-in zip. These checks are not live Fusion or GitHub runner evidence. The C# add-in remains in the tree. The [E2E record](../status/e2e-stable-release.md) is pending on both platforms.
 
-## Tracking the audit findings
+## Remaining file map
 
-| Finding | Planned resolution | Blocking gate |
-| --- | --- | --- |
-| `expected_revision` advertised but absent in Python | Phase 2 implements it or changes the public schema and contract before release; preserving the current contract is preferred. | Behavior |
-| Python remote bind has no opt-in | Phase 3 enforces `FUSION_MCP_ALLOW_REMOTE=1` before socket bind. | Safety |
-| 300/310-second edits conflict with 30/45-second paths | Phase 2 chooses one timeout table, updates every active path and test, and verifies the journal barrier. | Behavior, safety |
-| CI lacks add-in E2E evidence | Phases 5–6 add automated checks and recorded live Windows/macOS runs. | Platforms, quality |
-| Upstream clone unpinned; release lacks artifacts | Phases 1 and 5 pin source and publish installable, checksummed assets. | Quality, documentation |
+| Responsibility | Files |
+| --- | --- |
+| Protocol and effect gap fixes, only if tests expose them | `addon/Fusion360MCP/server/socket_server.py`, `command_handler.py`, `event_bridge.py`, `tests/python_addin/test_contract.py`, `tests/Fusion360.Mcp.Server.Tests/IdempotentToolBackendTests.cs` |
+| Installer rollback and runner checks | `scripts/install-addon.sh`, `scripts/install-addon.ps1`, `.github/workflows/ci.yml` |
+| Candidate version and packaging | `Directory.Build.props`, `addon/Fusion360MCP/Fusion360MCP.manifest`, `scripts/package_addin.py`, `scripts/publish.sh`, planned scripts/check_release_evidence.py, `.github/workflows/release.yml`, `.github/workflows/docker.yml` |
+| Live runbook and evidence | `docs/E2E-STATUS.md`, `docs/status/e2e-stable-release.md`, `docs/status/python-addin-compatibility.md` |
+| Legacy removal after preliminary platform pass | `src/Fusion360.Mcp.AddIn/`, `tests/Fusion360.Mcp.AddIn.Tests/`, `thirdparty/adsk/`, `Fusion360Mcp.sln`, `Directory.Build.props`, `.github/workflows/ci.yml`, `scripts/check_guards_baseline.json` |
+| Final user documentation and release | `README.md`, `docs/INSTALL.md`, `docs/ARCHITECTURE.md`, `docs/DOCKER.md`, `docs/TOOLS.md`, `docs/STATUS.md`, `docs/GOVERNANCE.md`, `docs/adr/*.md`, `docs/decisions/*.md`, `.github/workflows/release.yml`, `.github/workflows/docker.yml` |
 
-## Decisions and remaining choices
+### Task 1: Close static contract and installer gaps
 
-- The release will ship a pinned Python add-in copy from this repository. The
-  upstream commit and MIT license are recorded in `addon/UPSTREAM.md`.
-- LAN access remains available with explicit non-loopback opt-in and trusted
-  network instructions. Authentication is a separate future change.
-- The stable version number is pending release gates; `1.0.0` is proposed.
-- Supported Fusion versions must come from the two live E2E environments;
-  the current `2026+` tool annotations alone are not a compatibility claim.
+**Files:** `tests/python_addin/test_contract.py`, relevant Python server file only if a test fails, both installers and `.github/workflows/ci.yml` only if rollback checks fail.
 
-## Out of scope
+**Interfaces:** `Fusion360MCPServer._dispatch(client, command)` emits one JSON frame; `CommandHandler.execute_command(command: dict) -> dict`; `EventBridge.submit(command: dict, timeout: float = 300.0) -> dict`. The C# server consumes these frames through `Fusion360Connection` and `IdempotentToolBackend`.
 
-Adding `execute_code` to the C# MCP catalog, authenticating the TCP protocol,
-adding Linux Fusion support, and changing the 92 tool names or parameter units
-are separate product decisions. A failed live Windows or macOS gate blocks the
-stable release; it does not silently narrow platform support.
+- [ ] **Step 1:** Add headless tests named `test_socket_rejects_malformed_requests_and_recovers` and `test_export_failure_with_observed_file_does_not_claim_no_effects`. Assert the response frame and successful follow-up `ping` for the first; assert `partial_effects` is not `false` for the second.
+- [ ] **Step 2:** Run `python3.12 -m unittest discover -s tests/python_addin -v`; verify each new test fails for a real contract gap, or record that the existing behavior already passes.
+- [ ] **Step 3:** Make only the code changes required by a failing test. Keep the 92-tool catalog, server-only `operation_id`, and wire shape unchanged.
+- [ ] **Step 4:** Add an installer replacement-failure check to the Windows and macOS CI jobs: install once, provide an invalid package or failed stage, assert the prior `Fusion360MCP.py` still exists, then install again successfully.
+- [ ] **Step 5:** Run `dotnet build Fusion360Mcp.sln -c Release`, both Core/Server test projects, `python3.12 scripts/check_tool_parity.py`, `python3.12 scripts/check_guards.py`, and `git diff --check`. Require all commands to exit zero.
+- [ ] **Step 6:** On a branch with CI enabled, run `.github/workflows/ci.yml` and record the Windows/macOS job URLs and results in `docs/status/python-addin-compatibility.md`. Commit any fixes and evidence separately from unrelated changes.
+
+### Task 2: Preliminary live compatibility on both Fusion hosts
+
+**Files:** `docs/E2E-STATUS.md`, `docs/status/python-addin-compatibility.md`; Python source or installer only for a reproduced defect.
+
+**Interfaces:** Release zip from `python3 scripts/package_addin.py`; `ping`, `get_scene_info`, `create_sketch`, `draw_rectangle`, `extrude`, `render_view`, and `export_f3d` use the 92-tool catalog and the runbook request shapes.
+
+- [ ] **Step 1:** Build the add-in zip and server artifacts from one identified commit with `bash scripts/publish.sh`; verify `cd dist && shasum -a 256 -c SHA256SUMS`.
+- [ ] **Step 2:** On macOS Fusion, install the zip into a disposable test environment and run every row of the [E2E runbook](../E2E-STATUS.md) against a saved, named design. Record OS/Fusion versions, hashes, requests, responses, and defects.
+- [ ] **Step 3:** Repeat Step 2 on Windows Fusion with the same add-in zip. This step awaits a Windows host and cannot be inferred from PowerShell runner checks.
+- [ ] **Step 4:** If either platform fails, add a focused regression test, fix the defect, rebuild artifacts, and rerun the affected rows on both platforms where shared behavior changed.
+- [ ] **Step 5:** Mark preliminary compatibility passed in `docs/status/python-addin-compatibility.md` only after both runs pass. Keep `docs/status/e2e-stable-release.md` pending until the final release candidate is tested.
+
+### Task 3: Retire the C# add-in and build the versioned candidate
+
+**Prerequisite:** Task 2 passed on both hosts. This task must not begin based only on headless CI.
+
+**Files:** Legacy directories, `Fusion360Mcp.sln`, `Directory.Build.props`, Python manifest, CI, guard baseline, current guides and historical decision notes listed above.
+
+- [ ] **Step 1:** Compare `tests/Fusion360.Mcp.AddIn.Tests/` with `tests/python_addin/test_contract.py`. Add Python tests for any missing revision conflict, stale reference, timeout, partial-effect, verification, or remote-bind assertion, and run the Python suite before deleting the C# tests.
+- [ ] **Step 2:** Remove `src/Fusion360.Mcp.AddIn/`, `tests/Fusion360.Mcp.AddIn.Tests/`, and `thirdparty/adsk/`; remove their solution, `net48`, and CI references. Keep the server/Core and historical ADRs.
+- [ ] **Step 3:** Update current guides to the sole Python add-in and annotate historical decisions that describe the retired paths. Regenerate `docs/TOOLS.md` if its generator or catalog changes.
+- [ ] **Step 4:** Choose the stable candidate version (proposed `1.0.0`), set the same value in `Directory.Build.props` and `Fusion360MCP.manifest`, then run `bash scripts/publish.sh`. Record the resulting artifact hashes; any later source or package change requires rebuilding and rechecking affected E2E rows.
+- [ ] **Step 5:** Run a clean checkout build, Core/Server tests, Python tests, parity, guards, installer jobs, and `git diff --check`. Require no `net48` or adsk dependency in the active solution. Commit the candidate before final E2E.
+
+### Task 4: Validate the final candidate and publish
+
+**Files:** `docs/status/e2e-stable-release.md`, `docs/STATUS.md`, release notes/current guides, `.github/workflows/release.yml` or Docker workflow only for a demonstrated gate defect.
+
+- [ ] **Step 1:** Run the full candidate matrix in [E2E-STATUS.md](../E2E-STATUS.md) on Windows and macOS using the artifacts built from Task 3's commit. Record both server and add-in hashes, OS/Fusion versions, saved design, commands, responses, defects, and reruns.
+- [ ] **Step 2:** Review each specification acceptance criterion against the test record. Set `Windows: pass`, `macOS: pass`, `Status: pass`, `Candidate version`, and `Add-in SHA256` only when all required rows pass; make no support claim beyond the tested Fusion versions.
+- [ ] **Step 3:** Add scripts/check_release_evidence.py with `check_release_evidence(path: Path, version: str, addin_zip: Path) -> None`; it must reject pending platform lines, version mismatch, and add-in SHA-256 mismatch. Add tests for each rejection and success, call it from both versioned workflows, then run CI on the final candidate commit before creating a tag.
+- [ ] **Step 4:** Review release notes and current docs for install, upgrade, uninstall, journal persistence, network exposure, preview API limits, and known issues. Commit the evidence and docs; if that changes packaged source, rebuild and repeat affected platform checks.
+- [ ] **Step 5:** After all gates pass, create the matching `v<version>` tag and verify the release has four server archives, the Python zip, SHA-256 file, notes, and a Docker image from the same commit. Do not tag or publish while any gate is pending.
+
+## Completion rule
+
+The task is complete only when Task 4 has recorded final passing Windows and macOS runs and the tagged release assets are verified. Local tests, an install on one host, or a passing CI run alone do not close it.
