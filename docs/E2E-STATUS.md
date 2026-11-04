@@ -52,6 +52,40 @@ client. Record each request and response in the evidence file below.
    after the check. Use instrumented headless tests for queued/executing
    timeout races if they cannot be induced reliably in Fusion.
 
+## Catalog group matrix
+
+Run each row against the named, saved disposable design and record its exact
+request and response. Values in angle brackets are replaced with names returned
+by earlier operations or with an absolute disposable path. For each mutation,
+add the latest `expected_revision` and a fresh UUID `operation_id`; retain the
+exact original request for replay checks. Dimensions are in the catalog units.
+
+| Tool and example arguments | Precondition and observation |
+| --- | --- |
+| `get_scene_info` `{}` | Active saved design; record revision, bodies and sketches. |
+| `get_design_type` `{}` | Active design; record the reported type. |
+| `create_sketch` `{"plane":"xy"}` | Active design; record sketch name and revision. |
+| `extrude` `{"height":1,"profile_index":0,"operation":"new_body"}` | Draw a closed rectangle in the current sketch; record the resulting body. |
+| `move_body` `{"body_name":"<body>","x":1,"y":0,"z":0}` | Use the existing solid; verify its position changed. |
+| `create_box` `{"length":2,"width":1,"height":1}` | Active design; record the new solid's name and dimensions. |
+| `create_construction_plane` `{"method":"offset","plane":"xy","offset":2}` | Active design; verify the construction plane exists. |
+| `create_component` `{"name":"E2EComponent"}` | Name is unused; verify the new component. |
+| `get_physical_properties` `{"body_name":"<body>","accuracy":"medium"}` | Existing solid; record measured properties and units. |
+| `set_color` `{"body_name":"<body>","red":255,"green":0,"blue":0}` | Existing solid; inspect its appearance. |
+| `create_parameter` `{"name":"E2E_Length","value":10,"unit":"mm"}` | Parameter name is unused; inspect its value and unit. |
+| `patch_surface` `{"sketch_name":"<closed-sketch>","profile_index":0,"continuity":"connected"}` | Create a separate sketch with a closed profile; verify a surface is created. |
+| `flat_pattern` `{"body_name":"<sheet-metal-body>"}` | Create a valid sheet-metal body in the disposable design; verify the flat pattern. |
+| `cam_list_setups` `{}` | A CAM-capable design is active; record the setup list, including an empty list if applicable. |
+| `export_f3d` `{"file_path":"<disposable-absolute-path>/e2e.f3d"}` | Destination directory exists and is writable; inspect the resulting file. |
+| `render_view` `{"view":"iso","width":640,"height":480,"fit":true}` | Active design contains visible geometry; verify the returned image. |
+
+Before a candidate run, record any preview-only API exclusion, the Fusion
+version, and its reason in the evidence record. Do not infer an exclusion
+from an untested row. For journal conflict testing, repeat a successful
+mutation's `operation_id` with changed arguments and require
+`OPERATION_ID_CONFLICT` without another scene change. Also record a deliberately
+invalid mutation and verify that the scene remains unchanged.
+
 Repeat this sequence on Windows and macOS using the same candidate add-in
 zip. Record any Fusion preview API exclusions separately; do not count an
 unrun supported case as passed.

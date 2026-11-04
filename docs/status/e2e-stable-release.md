@@ -6,6 +6,10 @@ macOS: pending
 Candidate version: pending
 Add-in SHA256: pending
 
+Windows Fusion E2E has not been run: a Windows Fusion host is currently
+unavailable. Windows remains pending; installer CI is not a substitute for
+live Fusion testing.
+
 Record the candidate commit, server and add-in artifact SHA-256 values, OS and
 Fusion versions, named saved design, each command and observed response from
 the matrix in [the release task](../tasks/python-addin-stable-release.md),

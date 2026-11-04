@@ -3,7 +3,9 @@
 Status: working inventory, 2026-11-04. Candidate source: upstream commit
 `19b9f1e9519235ae4a0f5e8dc6b029c08b87ff5f`, copied into
 `addon/Fusion360MCP/` and committed with local changes in `1750af1`. This is static and
-headless evidence, not a live Fusion pass.
+headless evidence, not a live Fusion pass. Windows Fusion E2E has not been
+run because a Windows Fusion host is currently unavailable. Windows CI
+installation checks do not constitute live Fusion E2E evidence.
 
 | Contract | C# add-in before migration | Packaged Python add-in now | Remaining evidence |
 | --- | --- | --- | --- |
