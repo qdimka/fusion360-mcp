@@ -69,7 +69,7 @@ exact original request for replay checks. Dimensions are in the catalog units.
 | `move_body` `{"body_name":"<body>","x":1,"y":0,"z":0}` | Use the existing solid; verify its position changed. |
 | `create_box` `{"length":2,"width":1,"height":1}` | Active design; record the new solid's name and dimensions. |
 | `create_construction_plane` `{"method":"offset","plane":"xy","offset":2}` | Active design; verify the construction plane exists. |
-| `create_component` `{"name":"E2EComponent"}` | Name is unused; verify the new component. |
+| `create_component` `{"name":"E2EComponent"}` | Use an Assembly Design (not Part Design); name is unused. Verify the new component. |
 | `get_physical_properties` `{"body_name":"<body>","accuracy":"medium"}` | Existing solid; record measured properties and units. |
 | `set_color` `{"body_name":"<body>","red":255,"green":0,"blue":0}` | Existing solid; inspect its appearance. |
 | `create_parameter` `{"name":"E2E_Length","value":10,"unit":"mm"}` | Parameter name is unused; inspect its value and unit. |

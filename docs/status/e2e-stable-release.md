@@ -74,3 +74,61 @@ again with the same parameters threw `The node already has a parent` because
 the first encoding attached them to its JSON object. The codec now copies the
 parameters before encoding; the regression passed along with 121 Core and 84
 Server tests. A rebuilt server and live reconnect retest are still required.
+
+### Further preliminary macOS checks
+
+On 2026-11-04, a separate saved Assembly Design `Codex MCP E2E real assembly
+2026-11-04` was created using Fusion's document-type selector. With revision 0,
+`create_component {"name":"E2EComponent","expected_revision":0,
+"operation_id":"de1e615c-1809-4e64-acbb-0ad37b0c264d"}` succeeded at
+revision 1, and `list_components` showed the root and E2EComponent. The earlier
+failure in the similarly named Part Design did not exercise the required
+Assembly precondition.
+
+The source at `7a10607eebbddc29dd824bca70316724e4a3ee9d` was published locally;
+all five entries in `SHA256SUMS` verified. The Python zip hash remained
+`828a60be489771ecac6df0cc3de43038325a730b266515e5d09372877e11186b`;
+the macOS arm64 server archive hash was
+`06f418af514fab0f3e420e039e19d8dd9ac4ce85c06f6c062479290e6a6e7505`
+and the extracted server executable hash was
+`70b656b7a532a773564c7b78315afd76e92d3422a4b9bdd7aef5bca88feb92d7`.
+A separate server process with an isolated temporary journal connected to the
+live add-in through a localhost TCP proxy. After a successful `ping`, the proxy
+closed the connection; the next `ping` returned `pong` through the reconnected
+socket. This verifies the read-only reconnect path on that binary, not the full
+matrix or server restart and journal persistence.
+
+A saved test Part Design named `Codex MCP E2E sheet metal 2026-11-04` contains
+a closed 4×2 cm sketch. A genuine sheet-metal base flange and its flat pattern
+remain pending; UI automation could not operate Fusion's main toolbar. Network
+opt-in, full candidate reruns, and Windows Fusion E2E also remain pending.
+
+The built macOS arm64 server was also restarted against the live add-in with an
+isolated journal. `create_parameter {"name":"E2E_Journal_Restart","value":12,
+"unit":"mm","expected_revision":3,"operation_id":
+"bd9d6a97-e7ac-4970-b2ba-f1619a3b76a2"}` succeeded at revision 4. After
+server restart, the identical request returned the identical recorded result;
+`get_scene_info` remained at revision 4. This demonstrates persistence and
+replay for that operation.
+
+In the sheet-metal test document, `extrude` of the prepared profile with height
+0.1 cm (ID `f0f26df8-464c-4d29-b413-ecc34926ef9b`) produced a thin solid at
+revision 3. `create_flange {"body_name":"Body1","edge_index":0,"height":1,
+"angle":90,"expected_revision":3,"operation_id":
+"f1e6ffc7-d140-49e7-b6f3-c929a2bf431d"}` failed with
+`'FlangeFeatures' object has no attribute 'createInput'`; the scene remained
+unchanged. Fusion 2706.1.17 exposes `createEdgeFlangeInput` and
+`createBaseFlangeInput` as preview methods, explicitly marked not for
+distributed programs in its installed API documentation. This is a release
+blocker for the advertised flange tool; a real sheet-metal base flange and
+flat-pattern test remain outstanding. The thin extruded solid is not claimed
+to be a sheet-metal base flange.
+
+A diagnostic `flat_pattern` call on the thin solid (not a valid sheet-metal
+body), with revision 4 and operation ID `e99f29f9-3351-4f84-9341-3f13578edada`,
+failed before examining the body: `'Features' object has no attribute
+'flatPatternFeatures'`. The scene remained at revision 4. This identifies an
+API compatibility defect but does not constitute a flat-pattern E2E pass. The
+installed Fusion API exposes `Component.createFlatPattern(stationaryFace)`;
+its availability and behavior for a genuine sheet-metal body must be checked
+before implementing and validating a replacement.
