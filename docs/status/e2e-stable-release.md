@@ -132,3 +132,9 @@ API compatibility defect but does not constitute a flat-pattern E2E pass. The
 installed Fusion API exposes `Component.createFlatPattern(stationaryFace)`;
 its availability and behavior for a genuine sheet-metal body must be checked
 before implementing and validating a replacement.
+
+An isolated listener test rejected `127.0.0.2` without remote opt-in as
+expected. With opt-in, macOS returned `Can't assign requested address` for
+that loopback alias; the attempted test therefore did not verify an opt-in
+listener. No LAN listener was opened, so the trusted-network opt-in case
+remains pending.
