@@ -170,3 +170,13 @@ Autodesk introduced the preview API in October 2026 and warns it can change.
 Headless tests cover inputs, the override and its failure. A successful live
 run on a genuine sheet-metal body is still required; the earlier solid was not
 such a body. Windows remains untested.
+
+Source commit `4609ee8` was packaged as add-in zip SHA-256
+`80a6ea929f01dc10bf1f2c165a9a06463c9ea7bd28d17753e382ccae7708094a` and
+installed in Fusion 2706.1.17; its installed handler matched the archive.
+On saved test design `Codex MCP E2E flange preview 2026-11-04`, a regular
+`create_box` succeeded at revision 1; `create_flange` on that body (operation
+ID `c6b8e08e-a700-4d1a-9aef-b25505cb78b7`) rejected it as non-sheet-metal,
+and the scene stayed at revision 1. This is a negative-input check, not a
+successful flange E2E. The 25-test headless suite passed; a real sheet-metal
+body is still required to validate the preview API success path.
