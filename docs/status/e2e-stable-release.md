@@ -56,3 +56,21 @@ macOS 15.7.4, Fusion 2706.1.17, saved design `Codex MCP E2E candidate
 - Invalid `move_body` for `E2E_Missing` with revision 11 and ID `ee1565cf-f011-4522-b374-ef4be847e66d` returned `BODY_NOT_FOUND`, `outcome_unknown: true`; the scene and revision remained unchanged.
 
 Sheet-metal flat pattern, component creation in an Assembly, network, restart and full candidate-server checks remain pending. No Windows Fusion E2E has run.
+
+### Render defect retest
+
+A new add-in zip built from commit `591495b` has SHA-256
+`828a60be489771ecac6df0cc3de43038325a730b266515e5d09372877e11186b`.
+On macOS Fusion 2706.1.17, the installed handler matched the extracted
+package. After restarting Fusion, `cam_list_setups {}` returned zero setups
+and `render_view {"view":"iso","width":640,"height":480,"fit":true}`
+returned a 640×480 PNG. The first `ping` after restart returned `The node
+already has a parent`; a second read-only `ping` returned `pong`. The source
+and reproducibility of that reconnect error remain unconfirmed and require
+investigation. The fixed zip has not passed the full matrix or Windows tests.
+
+The reconnect error was reproduced headlessly: encoding a read-only request
+again with the same parameters threw `The node already has a parent` because
+the first encoding attached them to its JSON object. The codec now copies the
+parameters before encoding; the regression passed along with 121 Core and 84
+Server tests. A rebuilt server and live reconnect retest are still required.
