@@ -21,7 +21,7 @@ from . import get_logger
 from . import hints as _hints
 from . import hole_geometry as _hole_geom
 from . import parameter_units as _param_units
-from .effects import DOCUMENT_MUTATION_COMMANDS
+from .effects import DOCUMENT_MUTATION_COMMANDS, EXTERNAL_OUTPUT_COMMANDS
 from .revision import state as revision_state
 
 log = get_logger("handler")
@@ -265,6 +265,7 @@ class CommandHandler:
                     partial_effects=False,
                 )
 
+        output_before = self._output_markers(params) if cmd_type in EXTERNAL_OUTPUT_COMMANDS else None
         try:
             t0 = time.monotonic()
             result = handler(**params)
@@ -284,6 +285,14 @@ class CommandHandler:
                     failure["result"]["partial_effects"] = True
                     failure["result"]["deltas"] = self._compute_deltas(snap_before, after)
                     failure["result"]["revision_after"] = revision_state.increment(identity)
+                else:
+                    failure["result"]["outcome_unknown"] = True
+            if output_before is not None:
+                output_after = self._output_markers(params)
+                changed = any(before is not None and after is not None and after != ("missing",) and before != after
+                              for before, after in zip(output_before, output_after))
+                if changed:
+                    failure["result"]["partial_effects"] = True
                 else:
                     failure["result"]["outcome_unknown"] = True
             return failure
@@ -312,6 +321,24 @@ class CommandHandler:
             result["revision_after"] = revision_state.increment(identity)
 
         return {"status": "success", "result": result}
+
+    @staticmethod
+    def _output_markers(params):
+        markers = []
+        for key in ("file_path", "output_dir", "output_folder"):
+            path = params.get(key)
+            if not isinstance(path, str) or not path:
+                markers.append(None)
+                continue
+            try:
+                stat = os.stat(path)
+                markers.append((stat.st_dev, stat.st_ino, stat.st_size,
+                                stat.st_mtime_ns, stat.st_ctime_ns))
+            except FileNotFoundError:
+                markers.append(("missing",))
+            except OSError:
+                markers.append(None)
+        return markers
 
     @staticmethod
     def _failure(kind, message, **fields):

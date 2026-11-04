@@ -149,6 +149,34 @@ class ContractTests(unittest.TestCase):
         self.assertEqual(1, result["deltas"]["body_count_delta"])
         self.assertEqual(1, result["revision_after"])
 
+    def test_failed_export_with_new_file_reports_partial_effects(self):
+        handler = self.handler()
+        def fail(file_path):
+            Path(file_path).write_text("exported")
+            raise RuntimeError("export failed")
+        handler.export_f3d = fail
+        with tempfile.TemporaryDirectory() as directory:
+            result = handler.execute_command({"type": "export_f3d", "params": {
+                "file_path": str(Path(directory) / "output.f3d"),
+            }})["result"]
+        self.assertFalse(result["ok"])
+        self.assertIs(result["partial_effects"], True)
+
+    def test_failed_export_over_existing_file_never_claims_no_effect(self):
+        handler = self.handler()
+        def fail(file_path):
+            Path(file_path).write_text("changed export")
+            raise RuntimeError("export failed")
+        handler.export_f3d = fail
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "output.f3d"
+            path.write_text("old")
+            result = handler.execute_command({"type": "export_f3d", "params": {
+                "file_path": str(path),
+            }})["result"]
+        self.assertIsNot(result.get("partial_effects"), False)
+        self.assertTrue(result.get("partial_effects") or result.get("outcome_unknown"))
+
     def test_invalid_expected_revision_does_not_reach_handler(self):
         handler = self.handler()
         called = []
