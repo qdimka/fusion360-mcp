@@ -35,6 +35,11 @@ These are the most consequential inputs to check during Task 1 and the platform 
 
 Commit `1750af1` contains the pinned Python add-in, installers, release packaging, CI/release workflow edits, and the [compatibility inventory](../status/python-addin-compatibility.md). Local checks before that commit passed: 12 Python headless tests, 92-tool dispatch/effect parity, docs guards, .NET build and tests, macOS repeat installation in a temporary AddIns directory, and checksums for four server archives plus the add-in zip. These checks are not live Fusion or GitHub runner evidence. The C# add-in remains in the tree. The [E2E record](../status/e2e-stable-release.md) is pending on both platforms.
 
+The executable steps for Tasks 1–4 below are in the
+[remaining-tasks plan](stable-release-next-steps.md). It also splits their
+protocol, installer, platform, retirement, and publication work into
+independently checkable changes.
+
 ## Remaining file map
 
 | Responsibility | Files |
