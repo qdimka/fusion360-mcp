@@ -1,3 +1,5 @@
+The C# implementation paths described here were removed on 2026-11-04. The revision contract remains relevant; current Fusion implementation is in the Python add-in.
+
 # ADR-0011 — Lightweight model revisioning with `expected_revision`
 
 Status: accepted (implemented).
@@ -18,7 +20,7 @@ The API addresses scene entities by names rather than persistent COM object hand
 
 ## Evidence
 
-Implemented in `src/Fusion360.Mcp.AddIn/ModelRevision.cs` and `CommandHandler.cs`. `get_scene_info` returns `model_revision`; document mutations check an optional `expected_revision` before running their handlers. Revision conflicts and stale named references use the corresponding error kinds.
+The original implementation used the former C# add-in revision tracker (removed 2026-11-04). The contract remains: `get_scene_info` returns `model_revision`; document mutations check an optional `expected_revision` before running handlers. Revision conflicts and stale named references use the corresponding error kinds.
 
 ## Alternatives rejected
 

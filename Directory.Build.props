@@ -12,10 +12,4 @@
     <Version>0.1.0</Version>
   </PropertyGroup>
 
-  <!-- D3: allow building net48 targets on non-Windows hosts (ubuntu CI, macOS dev).
-       Reference-only package; no runtime impact on Windows. -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
-    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
-  </ItemGroup>
-
 </Project>

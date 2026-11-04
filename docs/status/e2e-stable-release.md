@@ -1,22 +1,27 @@
 # Stable release E2E evidence
 
 Status: pending
-Windows: pending
+Windows: deferred (post-release)
 macOS: pending
 Candidate version: pending
 Add-in SHA256: pending
 
-Windows Fusion E2E has not been run: a Windows Fusion host is currently
-unavailable. Windows remains pending; installer CI is not a substitute for
-live Fusion testing.
+Windows Fusion E2E has not been run because a Windows Fusion host is currently
+unavailable. Per the release decision, this live matrix is deferred until after
+release; Windows installer CI remains required before publication. The
+post-release Windows run must use the published candidate and record its exact
+Fusion version and artifact checksums here.
 
 Record the candidate commit, server and add-in artifact SHA-256 values, OS and
 Fusion versions, named saved design, each command and observed response from
 the matrix in [the release task](../tasks/python-addin-stable-release.md),
 defects, and affected-case reruns. The add-in hash must match the reproducible
 release zip built from the tagged source. Change a platform line to `pass` only after
-its run is complete. Set `Status: pass` only when both platform runs and all
-release-blocking cases pass on the candidate artifacts.
+its run is complete. Set `macOS: pass` only after the complete candidate matrix
+passes. Keep Windows as `deferred (post-release)` for publication; change it to
+`pass` only after the live post-release run. Overall status may pass for
+publication when macOS and all other release gates pass, with the Windows
+follow-up explicitly tracked.
 
 ## Preliminary artifacts (not E2E evidence)
 

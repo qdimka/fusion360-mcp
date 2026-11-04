@@ -1,3 +1,5 @@
+Superseded: the legacy C# add-in and its compile-time adsk stubs were removed on 2026-11-04. This ADR is retained as historical implementation context only.
+
 # ADR-0003 — Committed `adsknet.dll` compile-time stub for CI (D3)
 
 Status: accepted (implemented).

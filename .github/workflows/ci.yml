@@ -9,9 +9,7 @@ permissions:
   contents: read
 
 jobs:
-  # net10.0 + netstandard2.0 + net48 builds; tests for the two net10 test suites.
-  # AddIn (net48) is part of the solution build; its adsk reference is a no-op
-  # glob when thirdparty/adsk/ has no DLLs, so this job never requires adsk (D3).
+  # .NET 10 MCP server/Core, Python add-in, and contract tests.
   build-test:
     runs-on: ubuntu-latest
     steps:
@@ -37,26 +35,6 @@ jobs:
           python scripts/check_tool_parity.py
           python scripts/check_guards.py
           python scripts/package_addin.py
-
-  # The legacy C# add-in stays buildable until the Python E2E gate is complete.
-  addin:
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '10.0'
-      - name: Detect adsk assemblies
-        id: adsk
-        shell: pwsh
-        run: |
-          $found = Get-ChildItem -Path .\thirdparty\adsk -Filter *.dll -File -ErrorAction SilentlyContinue
-          $present = $null -ne $found -and @($found).Count -gt 0
-          "present=$($present.ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT
-          if (-not $present) { Write-Host "thirdparty/adsk: no adsk .NET assemblies yet (T1 TODO) - skipping AddIn build." }
-      - name: Build AddIn (requires adsk)
-        if: steps.adsk.outputs.present == 'true'
-        run: dotnet build src/Fusion360.Mcp.AddIn/Fusion360.Mcp.AddIn.csproj -c Release
 
   python-windows-install:
     runs-on: windows-latest

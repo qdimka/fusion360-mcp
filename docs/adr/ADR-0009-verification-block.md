@@ -1,3 +1,5 @@
+The C# handler paths described here were removed on 2026-11-04. Treat implementation details below as historical; current behavior is in the Python add-in and tool contract.
+
 # ADR-0009 — Verification levels and named checks
 
 Status: accepted (implemented).
@@ -20,7 +22,7 @@ Mutation deltas show whether a feature changed the scene. Verification describes
 
 ## Evidence
 
-Implemented in `src/Fusion360.Mcp.Core/Protocol/Verification.cs` and `src/Fusion360.Mcp.AddIn/Handlers/VerificationBuilder.cs`. Tolerances are centralized in `VerificationTolerances.cs`. The optional summary is rendered by the MCP server. `roundtrip_checked` is defined but is not currently emitted by a handler.
+Implemented in the shared Core and the former C# add-in verification handler (removed 2026-11-04). Tolerances are centralized in `VerificationTolerances.cs`. The optional summary is rendered by the MCP server. `roundtrip_checked` is defined but is not currently emitted by a handler.
 
 ## Alternatives rejected
 

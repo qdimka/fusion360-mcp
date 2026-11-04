@@ -6,8 +6,9 @@ Install the add-in on the machine running Fusion 360:
 - **Windows:** from PowerShell, run
   `powershell -ExecutionPolicy Bypass -File scripts\install-addon.ps1`.
 
-Both scripts install the checked-in Python add-in. Stop the previous C# add-in
-before upgrading, and preserve the MCP server's operation journal.
+Both scripts install the checked-in Python add-in. If an older C# add-in is
+installed, stop or remove it in Fusion before testing to avoid two listeners
+on port 9876. Preserve the MCP server's operation journal.
 
 Open Fusion 360 and run **Shift+S → Add-Ins → Fusion360MCP → Run**. Confirm
 the TEXT COMMANDS window shows
@@ -86,9 +87,10 @@ mutation's `operation_id` with changed arguments and require
 `OPERATION_ID_CONFLICT` without another scene change. Also record a deliberately
 invalid mutation and verify that the scene remains unchanged.
 
-Repeat this sequence on Windows and macOS using the same candidate add-in
-zip. Record any Fusion preview API exclusions separately; do not count an
-unrun supported case as passed.
+Run this sequence on macOS before release using the candidate add-in zip.
+Windows installer CI is a pre-release gate. Run the same live Fusion sequence
+on Windows after release using the published candidate, and record preview API
+exclusions separately; do not count an unrun supported case as passed.
 
 The stable release's platform evidence is recorded in
 [e2e-stable-release.md](status/e2e-stable-release.md); this file is the runbook.

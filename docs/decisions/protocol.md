@@ -1,9 +1,9 @@
 # Protocol — decisions and implementation notes
 
 Modules: protocol models and codec in `src/Fusion360.Mcp.Core/Protocol/`,
-with the candidate Python bridge in `addon/Fusion360MCP/server/`. The former
-C# bridge remains under `src/Fusion360.Mcp.AddIn/` pending live migration
-checks. This file records design history; current wire behavior is described
+with the Python bridge in `addon/Fusion360MCP/server/`. The former C# bridge
+was retired from the repository; historical implementation decisions are
+superseded by the Python add-in. This file records design history; current wire behavior is described
 in [`TOOL_CONTRACTS.md`](../TOOL_CONTRACTS.md). Active invariants remain in
 code comments marked `INVARIANT`, `MEASURED`, `DOC`, or `LIMIT`.
 

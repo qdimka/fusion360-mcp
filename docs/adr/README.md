@@ -13,11 +13,11 @@ This directory records architecture decisions using the ADR pattern, inspired by
 
 | ADR | Topic | Status |
 |---|---|---|
-| [ADR-0001](ADR-0001-targets.md) | Target frameworks: net10 server / net48 add-in / netstandard2.0 core | accepted (implemented) |
+| [ADR-0001](ADR-0001-targets.md) | Historical target frameworks: net10 server / net48 add-in / netstandard2.0 core | superseded for Fusion add-in |
 | [ADR-0002](ADR-0002-mcp-sdk.md) | Official C# MCP SDK and TCP :9876 bridge | accepted (implemented) |
-| [ADR-0003](ADR-0003-adsk-stub.md) | Compile-time `adsknet.dll` stub for CI | accepted (implemented) |
+| [ADR-0003](ADR-0003-adsk-stub.md) | Compile-time `adsknet.dll` stub for CI | superseded |
 | [ADR-0004](ADR-0004-roslyn-execute-code.md) | Arbitrary `execute_code` tool | superseded |
-| [ADR-0005](ADR-0005-facade-ifusioncontext.md) | `IFusionContext` facade and main-thread dispatch | accepted (implemented) |
+| [ADR-0005](ADR-0005-facade-ifusioncontext.md) | `IFusionContext` facade and main-thread dispatch | superseded for current Fusion execution |
 | [ADR-0006](ADR-0006-tool-catalog-ssot.md) | Single source of truth for the tool catalog | accepted (implemented) |
 | [ADR-0007](ADR-0007-git-local.md) | Local Git history; no remote unless requested | accepted (implemented) |
 | [ADR-0008](ADR-0008-style-gates.md) | C# version, nullable checks, warning policy, and xUnit | accepted (implemented) |

@@ -5,28 +5,33 @@ Status: approved direction, implementation in progress. Related plan:
 
 ## Intent and decisions
 
-The first stable release should give Windows and macOS Fusion users one
-installable add-in with the same 92 typed MCP tools. The .NET server and its
+The stable release gives Windows and macOS Fusion users one installable add-in
+with the same 92 typed MCP tools. Windows installer CI runs before release; live
+Windows Fusion E2E follows after release. The .NET server and its
 durable operation journal remain. This removes the platform split in which
-the C# add-in serves Windows and a separately sourced Python add-in serves
-macOS.
+the former C# add-in served Windows and a separately sourced Python add-in
+served macOS.
 
 The approaches considered were (1) keep two add-ins and maintain two behavior
 contracts, (2) ship the pinned Python add-in on both hosts while retaining the
 C# MCP server, and (3) replace both the add-in and server with upstream Python.
 The chosen approach is (2): it preserves the server's typed catalog and journal
-while making the Fusion component cross-platform. The C# add-in stays in source
-until the packaged Python replacement passes live checks on both hosts.
+while making the Fusion component cross-platform. The C# add-in has been
+removed from the repository. Windows live Fusion E2E is scheduled after release
+because no Windows Fusion host is available.
 
 Non-goals for this release are Linux Fusion support, adding `execute_code`,
-changing the 92 tool names or units, and TCP authentication. A release that
-silently drops Windows support, publishes without live evidence, or loses
-mutation journal data fails this specification even if local tests pass.
+changing the 92 tool names or units, and TCP authentication. A release that silently drops Windows support or loses mutation journal data
+fails this specification even if local tests pass. The project owner has
+explicitly deferred live Windows Fusion E2E until after release; this known
+validation gap must be disclosed in release notes and completed against the
+published candidate.
 
 ## Goal
 
 Release the C# MCP server with one packaged Python Fusion add-in for Windows
-and macOS, with the advertised 92-tool behavior verified on both platforms.
+and macOS, with the advertised 92-tool behavior verified on macOS before
+release and Windows after release.
 
 ## Acceptance criteria
 
@@ -34,8 +39,9 @@ and macOS, with the advertised 92-tool behavior verified on both platforms.
   without fetching source code during installation.
 - Every advertised tool dispatches; revision, mutation, timeout, journal,
   verification, and network contracts below have automated coverage.
-- Fresh-install and saved-design E2E runs pass on Windows and macOS using the
-  candidate artifacts, with the exact versions and results recorded.
+- Fresh-install and saved-design E2E on macOS passes on the candidate
+  artifacts, with exact versions and results recorded. Windows installer CI
+  passes before publication; live Windows Fusion E2E is recorded after release.
 - CI, release assets, checksums, installation guides, and known limitations
   match the same release commit. The retired C# add-in is absent from active
   build, install, and user guidance.
@@ -44,11 +50,10 @@ and macOS, with the advertised 92-tool behavior verified on both platforms.
 
 Commit `1750af1` contains the pinned Python add-in, headless contract tests,
 both installer scripts, the release zip builder, and CI/release workflow
-changes. The C# add-in remains until the Python replacement passes live
-Windows and macOS checks. Both platform lines in the
-[evidence record](../status/e2e-stable-release.md) remain pending; a Windows
-Fusion host is not currently available. The changed workflows have not yet
-been exercised on GitHub runners. The commit also includes timeout edits that
+changes. The C# add-in has been removed. macOS live validation remains a release gate.
+Windows live validation is deferred until after release because a Windows Fusion
+host is unavailable. macOS evidence remains pending; Windows is marked deferred.
+The changed workflows have not yet been exercised on GitHub runners. The commit also includes timeout edits that
 predated the release work; their provenance matters in review.
 
 ## Required behavior
@@ -152,7 +157,7 @@ deletes designs, exported files, or the server journal. They report the
 installed version and next steps: start or restart Fusion, run the add-in if
 needed, then call `ping` and `get_scene_info`.
 
-Upgrade instructions explain how to stop the old C# add-in, avoid two
+Upgrade instructions explain how to stop any installed legacy C# add-in, avoid two
 listeners on port 9876, install the Python add-in, preserve the operation
 journal, and verify the new installation. Uninstall instructions remove only
 the installed add-in package and client configuration unless the user
@@ -160,7 +165,7 @@ explicitly chooses to remove journal data.
 
 ### 7. CI, artifacts, and release behavior
 
-A pull request runs C# Core/Server tests, Python add-in unit and protocol
+A pull request runs .NET Core/Server tests, Python add-in unit and protocol
 tests without Fusion, 92-tool catalog/dispatch parity, docs/link guards,
 installer/package validation, and a clean build. CI must run from checked-in
 sources without a local `reference/` clone. A release candidate attaches
@@ -172,8 +177,8 @@ recorded and approved.
 
 ### 8. Live E2E acceptance matrix
 
-Run this matrix on both Windows Fusion and macOS Fusion using the candidate
-add-in package and server artifact. Record OS, Fusion version, artifact
+Run this matrix on macOS Fusion using the candidate add-in package and server
+artifact before release. Record OS, Fusion version, artifact
 checksums, design name, commands, responses, and defects. Use a named, saved
 design for stateful cases and save again before restarting Fusion.
 
@@ -192,8 +197,9 @@ design for stateful cases and save again before restarting Fusion.
 All 92 tools require automated catalog-to-handler dispatch coverage. A smaller
 live smoke set is acceptable only when it covers every major tool group plus
 the high-risk behaviors above; the exact commands and excluded preview-only
-APIs are recorded before the candidate run. A failing supported-platform case
-blocks the stable release until fixed and rerun.
+APIs are recorded before the candidate run. A failing macOS candidate case blocks the stable release until fixed and rerun.
+Run the same matrix on Windows Fusion after release and record any corrections
+as a follow-up candidate.
 
 ### 9. Documentation and release notes
 
@@ -219,13 +225,14 @@ add-in zip, and valid SHA-256 checksums. These checks were run before commit
 `1750af1`; that commit has not yet been exercised on a GitHub runner or in
 live Fusion.
 
-Before closing the task, record the release commit and candidate hashes, CI
-run, Windows and macOS Fusion versions, E2E commands and results, and defects
-and reruns. Headless and unit checks do not satisfy the platform criterion.
+Before closing the release task, record the release commit and candidate hashes,
+CI run, macOS Fusion version and E2E commands/results, and defects and reruns.
+Schedule the Windows Fusion matrix against the published artifacts after release.
+Headless and unit checks do not satisfy the macOS live E2E criterion.
 
 ## Next step
 
 Follow the remaining tasks in the [implementation plan](../plans/stable-release.md):
-review the candidate, run the installer jobs on GitHub runners, and execute
-the E2E matrix in live Fusion on Windows and macOS. Remove the legacy C#
-add-in only after the replacement passes those gates.
+review the candidate, run the installer jobs on GitHub runners, and execute the
+complete candidate E2E matrix in macOS Fusion. The C# add-in has been removed.
+Run the live Windows Fusion matrix against the published candidate after release.

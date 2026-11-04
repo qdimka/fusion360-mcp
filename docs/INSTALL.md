@@ -33,8 +33,9 @@ Use these steps when an AI coding agent installs the server for you.
    macOS or `Fusion360MCP\install-addon.ps1` with PowerShell on Windows.
    Both installers are included in the zip.
 
-3. If upgrading from the C# add-in, stop it before replacing its installed
-   folder. Keep the server's operation journal. Start or restart Fusion 360,
+3. If an older C# add-in is installed, stop or remove it in Fusion before
+   starting the Python add-in. This repository no longer builds or distributes
+   the C# add-in. Keep the server's operation journal. Start or restart Fusion 360,
    then run **Shift+S → Add-Ins → Fusion360MCP → Run**; the Python manifest
    does not enable autostart.
 4. Confirm that Fusion's TEXT COMMANDS window shows:

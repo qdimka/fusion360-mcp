@@ -5,8 +5,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Shared models are used by the net10 MCP server, the net48 add-in,
-         and the test projects alike: System.Text.Json is the only
+    <!-- Shared models are used by the net10 MCP server and the test
+         projects alike: System.Text.Json is the only
          runtime dependency (PLAN.md D2: no external dependencies beyond
          System.Text.Json). -->
     <PackageReference Include="System.Text.Json" Version="8.0.5" />

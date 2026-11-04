@@ -1,3 +1,5 @@
+Superseded for the Fusion add-in: the net48 C# add-in was retired on 2026-11-04. The active Fusion implementation is the Python package in `addon/Fusion360MCP/`; the .NET server and shared Core remain.
+
 # ADR-0001 — Target frameworks: net10 server / net48 add-in / netstandard2.0 core (D1)
 
 Status: accepted (implemented).

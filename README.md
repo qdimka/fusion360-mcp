@@ -8,7 +8,7 @@
 
 > **Beta** — under active development. The API and tool behavior may change between releases.
 
-The C# server exposes **92 typed MCP tools**, including `ping` for a connection health check. The upstream Python server also provides `execute_code`; this C# server and its packaged add-in reject that command. The checked-in Python add-in is being validated for a single Windows/macOS release path; see the [release task](docs/tasks/python-addin-stable-release.md).
+The C# server exposes **92 typed MCP tools**, including `ping` for a connection health check. The upstream Python server also provides `execute_code`; this C# server and its packaged add-in reject that command. The Python add-in is the only Fusion implementation. macOS live E2E is a release gate; Windows installer CI is required before release and Windows live Fusion E2E follows after release. See the [release task](docs/tasks/python-addin-stable-release.md).
 
 ## How it works
 
@@ -19,7 +19,7 @@ MCP Client ──stdio──> Fusion360.Mcp.Server (C#, .NET 10) ──TCP :9876
 The project has two components:
 
 1. **MCP server** (`Fusion360.Mcp.Server`, .NET 10) — serves the MCP protocol over stdio, provides a catalog of 92 tools plus resources, templates, and prompts, and forwards commands over TCP.
-2. **Fusion360MCP Add-in** (`addon/Fusion360MCP/`, Python) — runs inside Fusion 360 and executes adsk calls on the main thread through a CustomEvent queue. The older C# add-in remains in the repository until the Python package passes live Windows and macOS checks.
+2. **Fusion360MCP Add-in** (`addon/Fusion360MCP/`, Python) — runs inside Fusion 360 and executes adsk calls on the main thread through a CustomEvent queue. This is the only Fusion add-in implementation in the repository.
 
 ## Prerequisites
 
@@ -77,9 +77,10 @@ If installing from the release asset instead of a source checkout, extract
 `powershell -ExecutionPolicy Bypass -File Fusion360MCP\install-addon.ps1`
 on Windows from the extracted directory. The zip includes both installers.
 
-No upstream clone or C# add-in build is needed for installation. If upgrading
-from the C# add-in, stop it before replacing the installed `Fusion360MCP`
-folder. Preserve the MCP server's operation journal across upgrades.
+No upstream clone or C# add-in build is needed for installation. If an older
+C# add-in is installed, stop it in Fusion before starting Python to avoid two
+listeners on port 9876. Preserve the MCP server's operation journal across
+upgrades.
 
 Start Fusion (if it is already open, restart it manually). The Python
 manifest has `runOnStartup: false`; start it from **Shift+S → Add-Ins →

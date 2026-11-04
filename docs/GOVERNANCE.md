@@ -6,14 +6,17 @@
 manifest and release notes must identify the same release. A push to `main`
 builds and tests but does not create a GitHub Release. A `v<version>` tag
 matching the shared version starts the release and versioned Docker workflows.
-Those workflows require passing Windows and macOS evidence in
+Those workflows require passing macOS candidate evidence in
 [e2e-stable-release.md](status/e2e-stable-release.md); the release attaches
 server archives, the Python add-in zip, and SHA-256 checksums. Release notes
 state supported Fusion versions, known limits, and upgrade steps.
 
-The stable release remains blocked while a supported platform lacks a live
-candidate run or a release-blocking defect is open. The C# add-in is retired
-only after the Python replacement passes both platform runs.
+The C# add-in has been retired from the source tree, build, and distribution.
+Windows Fusion E2E is deferred until after release because no Windows Fusion
+host is currently available; Windows installer CI remains a release check.
+Record the limitation and schedule the live Windows candidate run as the first
+post-release compatibility task. The release remains blocked by a failed
+macOS candidate run or any other release-blocking defect.
 
 ## Technical debt
 

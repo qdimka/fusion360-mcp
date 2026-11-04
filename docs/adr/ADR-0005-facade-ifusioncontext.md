@@ -1,3 +1,5 @@
+Superseded for current Fusion execution: the C# add-in facade was removed on 2026-11-04. The active Fusion bridge is Python under `addon/Fusion360MCP/`.
+
 # ADR-0005 — Testable handlers: `IFusionContext` facade and main-thread dispatch (D5)
 
 Status: accepted (implemented).
