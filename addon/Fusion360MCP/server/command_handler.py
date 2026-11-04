@@ -226,7 +226,7 @@ class CommandHandler:
             }
 
         cmd_type = command.get("type")
-        raw_params = command.get("params") or {}
+        raw_params = command.get("params", {})
         if not isinstance(raw_params, dict):
             return self._failure("INVALID_INPUT", "params must be an object")
         params = dict(raw_params)

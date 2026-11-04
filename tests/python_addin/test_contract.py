@@ -2,6 +2,7 @@
 
 import json
 import os
+import socket
 from pathlib import Path
 import sys
 import tempfile
@@ -28,7 +29,7 @@ from generate_addin_effects import generate  # noqa: E402
 from server.command_handler import CommandHandler  # noqa: E402
 from server.event_bridge import EventBridge  # noqa: E402
 from server.revision import state as revision_state  # noqa: E402
-from server.socket_server import validate_bind_host  # noqa: E402
+from server.socket_server import Fusion360MCPServer, validate_bind_host  # noqa: E402
 
 
 class FakeEvent:
@@ -174,6 +175,45 @@ class ContractTests(unittest.TestCase):
         restarted = self.handler()
         restarted.get_scene_info = lambda: {"bodies": [], "sketches": []}
         self.assertEqual(1, restarted.execute_command({"type": "get_scene_info"})["result"]["model_revision"])
+
+    def test_socket_rejects_malformed_requests_and_recovers(self):
+        handler = self.handler()
+
+        class Bridge:
+            def submit(self, command):
+                if command.get("type") == "ping":
+                    return {"status": "success", "result": {"status": "pong"}}
+                return handler.execute_command(command)
+
+        server = Fusion360MCPServer(Bridge())
+        server._running = True
+        client, peer = socket.socketpair()
+        peer.settimeout(1)
+        thread = threading.Thread(target=server._handle_client, args=(client,))
+        thread.start()
+        try:
+            with peer.makefile("rb") as responses:
+                for request in (b"{invalid}\n", b"[]\n"):
+                    peer.sendall(request)
+                    result = json.loads(responses.readline())
+                    self.assertEqual("error", result["status"])
+                    self.assertEqual("INVALID_INPUT", result["error_kind"])
+                    self.assertTrue(result["message"])
+                peer.sendall(b'{"type":"create_box","params":[]}\n')
+                result = json.loads(responses.readline())
+                self.assertEqual("success", result["status"])
+                self.assertFalse(result["result"]["ok"])
+                self.assertEqual("INVALID_INPUT", result["result"]["error_kind"])
+                peer.sendall(b'{"type":"ping","params":{}}\n')
+                result = json.loads(responses.readline())
+                self.assertEqual("success", result["status"])
+                self.assertEqual("pong", result["result"]["status"])
+        finally:
+            server._running = False
+            peer.close()
+            client.close()
+            thread.join(2)
+            self.assertFalse(thread.is_alive())
 
     def test_bind_guard(self):
         validate_bind_host("localhost", None)

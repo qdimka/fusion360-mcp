@@ -197,7 +197,7 @@ class Fusion360MCPServer:
                         command = json.loads(line)
                     except json.JSONDecodeError:
                         self._send(
-                            client, {"status": "error", "message": "Invalid JSON"}
+                            client, {"status": "error", "error_kind": "INVALID_INPUT", "message": "Invalid JSON"}
                         )
                         continue
                     self._dispatch(client, command)
@@ -230,6 +230,10 @@ class Fusion360MCPServer:
 
     def _dispatch(self, client, command):
         """Submit command to bridge and send response back to client."""
+        if not isinstance(command, dict):
+            self._send(client, {"status": "error", "error_kind": "INVALID_INPUT",
+                                "message": "Request must be a JSON object"})
+            return
         try:
             response = self._bridge.submit(command)
         except Exception as exc:
