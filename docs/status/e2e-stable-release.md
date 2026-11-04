@@ -157,9 +157,8 @@ Autodesk documents [`Component.createFlatPattern`](https://help.autodesk.com/clo
 as a released API. Its
 [`createEdgeFlangeInput`](https://help.autodesk.com/cloudhelp/ENU/Fusion-360-API/files/fusion_FlangeFeatures_createEdgeFlangeInput.htm)
 API is preview and Autodesk says not to distribute programs using it. The
-`create_flange` compatibility defect therefore remains unresolved; release
-remains blocked, and a preview-only exclusion must not be represented as a
-successful supported-tool test.
+At that point the `create_flange` defect was unresolved; the later retest
+below records the preview implementation and its outcome.
 
 ### Edge-flange preview implementation
 
@@ -168,8 +167,8 @@ The project owner accepted the preview API risk. `create_flange` now uses
 rejects non-sheet-metal bodies and reports when the API is unavailable.
 Autodesk introduced the preview API in October 2026 and warns it can change.
 Headless tests cover inputs, the override and its failure. A successful live
-run on a genuine sheet-metal body is still required; the earlier solid was not
-such a body. Windows remains untested.
+run on a genuine sheet-metal body was still required at that point; the later
+retest below records it. Windows remains untested.
 
 Source commit `4609ee8` was packaged as add-in zip SHA-256
 `80a6ea929f01dc10bf1f2c165a9a06463c9ea7bd28d17753e382ccae7708094a` and
@@ -179,4 +178,26 @@ On saved test design `Codex MCP E2E flange preview 2026-11-04`, a regular
 ID `c6b8e08e-a700-4d1a-9aef-b25505cb78b7`) rejected it as non-sheet-metal,
 and the scene stayed at revision 1. This is a negative-input check, not a
 successful flange E2E. The 25-test headless suite passed; a real sheet-metal
-body is still required to validate the preview API success path.
+body was still required to validate the preview API success path; see the
+later retest below.
+
+
+### Live edge-flange and flat-pattern retest
+
+On 2026-11-04, macOS 15.7.4 with Fusion 2706.1.17 ran the installed add-in
+from source `4609ee8`, zip SHA-256
+`80a6ea929f01dc10bf1f2c165a9a06463c9ea7bd28d17753e382ccae7708094a`.
+A temporary local test add-in created and saved the disposable design `Codex
+MCP flange fixture 2026-11-04`, with a 4 × 2 cm base flange, `Steel (mm)`
+rule, and a genuine sheet-metal Body1. The fixture add-in and its registration
+were removed after the test; the saved design remains.
+
+`create_flange {"body_name":"Body1","edge_index":8,"height":1,"angle":90,
+"expected_revision":0,"operation_id":"3a23db3e-4f6a-4949-a7f9-54c18122bb3c"}`
+returned `EdgeFlange2`, revision 1. Body volume increased from 2.0 to
+approximately 3.089 cm³ and the bounding box grew; a rendered image showed
+the flange. `flat_pattern {"body_name":"Body1","expected_revision":1,
+"operation_id":"499ff79b-f6de-455f-84dd-45a7f4755cc2"}` returned
+`FlatPattern1`, revision 2. The model was saved. These results confirm the
+calls completed on one macOS build, not measured dimensional verification or
+Windows compatibility. The full candidate matrix and Windows E2E remain pending.
