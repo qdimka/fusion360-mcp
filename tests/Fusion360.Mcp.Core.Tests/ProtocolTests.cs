@@ -76,6 +76,20 @@ public class ProtocolCodecTests
         Assert.Equal(ErrorKind.Unknown, ErrorKindExtensions.FromWireString(null!));
     }
 
+    [Theory]
+    [InlineData("{\"status\":\"success\",\"result\":{\"ok\":false,\"error_kind\":\"TIMEOUT\",\"error_message\":\"Command timed out after 300s\",\"partial_effects\":false}}", false)]
+    [InlineData("{\"status\":\"success\",\"result\":{\"ok\":false,\"error_kind\":\"TIMEOUT\",\"error_message\":\"Command timed out after 300s\",\"outcome_unknown\":true}}", true)]
+    public void PythonBridgeTimeoutFrame_PreservesRetrySafety(string wire, bool unknown)
+    {
+        var frame = ProtocolCodec.ParseResponse(wire);
+
+        Assert.True(frame.IsSuccess);
+        Assert.False(frame.Result!.Ok);
+        Assert.Equal(ErrorKind.Timeout, frame.Result.ErrorKind);
+        Assert.Equal(unknown, frame.Result.Fields["outcome_unknown"]?.GetValue<bool>() == true);
+        Assert.Equal(!unknown, frame.Result.PartialEffects == false);
+    }
+
     [Fact]
     public void Error_Response_WithKindAndHints()
     {

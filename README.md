@@ -4,26 +4,26 @@
 
 *Example of CAD generation with Fusion360 MCP (accelerated playback).*
 
-*An MCP server that connects AI agents (Claude Code, Cursor, and any MCP client) to Autodesk Fusion 360 for CAD automation. This project is inspired by [Kompas3D-MCP](https://github.com/SergeySklyarov/Kompas3D-MCP) and is a C# port of the reference Python project [fusion360-mcp-server](https://github.com/faust-machines/fusion360-mcp-server).*
+*An MCP server that connects AI agents (Claude Code, Cursor, and any MCP client) to Autodesk Fusion 360 for CAD automation. The server is C#; the packaged Fusion add-in is Python. This project is inspired by [Kompas3D-MCP](https://github.com/SergeySklyarov/Kompas3D-MCP) and [fusion360-mcp-server](https://github.com/faust-machines/fusion360-mcp-server).*
 
 > **Beta** — under active development. The API and tool behavior may change between releases.
 
-The C# server exposes **92 typed MCP tools**, including `ping` for a connection health check. The reference Python implementation also provides `execute_code`, which runs supplied Python code inside Fusion 360. That tool remains available when using the reference Python server/add-in; it is not part of this C# server's 92-tool catalog.
+The C# server exposes **92 typed MCP tools**, including `ping` for a connection health check. The upstream Python server also provides `execute_code`; this C# server and its packaged add-in reject that command. The checked-in Python add-in is being validated for a single Windows/macOS release path; see the [release task](docs/tasks/python-addin-stable-release.md).
 
 ## How it works
 
 ```
-MCP Client ──stdio──> Fusion360.Mcp.Server (C#, .NET 10) ──TCP :9876──> Fusion360MCP Add-in (C#, net48, inside Fusion) ──CustomEvent──> main thread
+MCP Client ──stdio──> Fusion360.Mcp.Server (C#, .NET 10) ──TCP :9876──> Fusion360MCP Add-in (Python, inside Fusion) ──CustomEvent──> main thread
 ```
 
 The project has two components:
 
 1. **MCP server** (`Fusion360.Mcp.Server`, .NET 10) — serves the MCP protocol over stdio, provides a catalog of 92 tools plus resources, templates, and prompts, and forwards commands over TCP.
-2. **Fusion360MCP Add-in** (`Fusion360.Mcp.AddIn`, .NET Framework 4.8) — runs inside Fusion 360 and executes adsk calls on the main thread through EventBridge (CustomEvent plus a queue).
+2. **Fusion360MCP Add-in** (`addon/Fusion360MCP/`, Python) — runs inside Fusion 360 and executes adsk calls on the main thread through a CustomEvent queue. The older C# add-in remains in the repository until the Python package passes live Windows and macOS checks.
 
 ## Prerequisites
 
-- Autodesk Fusion 360. The C# add-in requires Fusion for Windows.
+- Autodesk Fusion 360 on Windows or macOS. Live validation of this packaged Python add-in on Windows is still pending.
 - [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) when building or running from source.
 - Docker Desktop when using the container image.
 - An MCP-compatible client such as Claude Code, OpenCode, Codex, or Cursor.
@@ -58,7 +58,7 @@ docker run --rm -i -e FUSION_MCP_HOST=host.docker.internal \
   -v fusion360-mcp-journal:/data fusion360-mcp:local --mode socket
 ```
 
-On macOS, install the reference Python add-in with `./scripts/install-addon.sh` for a real Fusion connection; `--mode mock` is also available.
+Install the checked-in Python add-in with the platform script below for a real Fusion connection; `--mode mock` is also available.
 
 ## Installation
 
@@ -66,26 +66,24 @@ On macOS, install the reference Python add-in with `./scripts/install-addon.sh` 
 
 Choose the installer for the Fusion host platform:
 
-- **macOS:** clone the reference add-in as described below, then run
-  `./scripts/install-addon.sh`. This installs the Python add-in as a development
-  symlink. It speaks the same `:9876` protocol, but is not the C# add-in.
+- **macOS:** run `./scripts/install-addon.sh`.
 - **Windows:** run `powershell -ExecutionPolicy Bypass -File scripts\install-addon.ps1`.
-  This builds and installs the C# add-in. Use `-Symlink` for development.
+  Both scripts install the checked-in Python source. Use `--symlink` on macOS
+  or `-Symlink` on Windows only for development.
 
-The C# add-in targets .NET Framework 4.8 and runs only in Fusion for Windows.
-Fusion for macOS needs the Python add-in, so the C# installer is not used there.
+If installing from the release asset instead of a source checkout, extract
+`Fusion360MCP-python.zip` outside Fusion's AddIns directory, then run
+`sh Fusion360MCP/install-addon.sh` on macOS or
+`powershell -ExecutionPolicy Bypass -File Fusion360MCP\install-addon.ps1`
+on Windows from the extracted directory. The zip includes both installers.
 
-From the repository root, prepare the reference add-in before installing it:
+No upstream clone or C# add-in build is needed for installation. If upgrading
+from the C# add-in, stop it before replacing the installed `Fusion360MCP`
+folder. Preserve the MCP server's operation journal across upgrades.
 
-```bash
-mkdir -p reference
-git clone https://github.com/faust-machines/fusion360-mcp-server reference/fusion360-mcp-server
-./scripts/install-addon.sh
-```
-
-The Windows installer excludes the compile-time stub `adsknet.dll` and Roslyn DLLs left by older incremental builds; Fusion provides adsknet at runtime.
-
-Start Fusion (if it is already open, restart it manually). The add-in starts automatically when `runOnStartup: true`. If autostart is disabled, start it from **Shift+S → Add-Ins → Fusion360MCP → Run**.
+Start Fusion (if it is already open, restart it manually). The Python
+manifest has `runOnStartup: false`; start it from **Shift+S → Add-Ins →
+Fusion360MCP → Run**.
 
 The TEXT COMMANDS window should show: `[MCP] Server listening on localhost:9876`
 
@@ -99,9 +97,9 @@ dotnet build -c Release
 # run:
 dotnet src/Fusion360.Mcp.Server/bin/Release/net10.0/Fusion360.Mcp.Server.dll --mode socket
 
-# or single-file artifacts (scripts/publish.sh → dist/):
+# or self-contained archives plus the Python add-in zip (scripts/publish.sh → dist/):
 ./scripts/publish.sh
-#   dist/Fusion360.Mcp.Server/<rid>/Fusion360.Mcp.Server  (win-x64, osx-arm64, osx-x64, linux-x64)
+#   dist/Fusion360.Mcp.Server-<rid>.zip and dist/Fusion360MCP-python.zip
 ```
 
 The server accepts `--mode mock|socket` (`socket` is the default), `--host`, `--port`, and the `FUSION_MCP_HOST` / `FUSION_MCP_PORT` environment variables (see Cross-machine setup below).
@@ -146,9 +144,10 @@ docker build -t fusion360-mcp:local .
 ```
 
 GitHub Actions builds and tests the solution on pull requests and pushes to `main`.
-When the version in `Directory.Build.props` has no matching GitHub Release, a successful
-`main` build creates a `v<version>` release with generated notes. Bump that shared
-`<Version>` value to publish a new release. The Docker workflow publishes the main branch
+A versioned GitHub Release is created only from a pushed `v<version>` tag
+matching `Directory.Build.props`, after the Windows/macOS E2E evidence file
+records passing candidate runs. The release attaches server archives, the
+Python add-in zip, and checksums. The Docker workflow publishes the main branch
 image as `ghcr.io/OWNER/REPOSITORY:main` and `:latest`, and publishes versioned images
 for pushed `v*` tags.
 
@@ -180,10 +179,10 @@ automatically.
 
 If the MCP server and Fusion 360 are running on different machines (e.g. server on Mac Mini, Fusion on Windows), override the binding address with env variables **on both sides**.
 
-**On the Fusion host ** (where add-in works), before running Fusion, link to all interfaces:
+**On the Fusion host** (where the add-in runs), before running Fusion, bind to all interfaces:
 
 ```bash
-export FUSION_MCP_HOST=0.0.0.0     # macOS / Linux
+export FUSION_MCP_HOST=0.0.0.0     # macOS
 $env:FUSION_MCP_HOST = "0.0.0.0"   # Windows
 export FUSION_MCP_ALLOW_REMOTE=1   # required opt-in for a non-loopback bind
 $env:FUSION_MCP_ALLOW_REMOTE = "1" # Windows
@@ -199,7 +198,7 @@ FUSION_MCP_HOST=192.168.1.42 /path/to/Fusion360.Mcp.Server --mode socket
 /path/to/Fusion360.Mcp.Server --mode socket --host 192.168.1.42
 ```
 
-**Security note:** TCP socket without authentication. The non-loopback bind is rejected until `FUSION_MCP_ALLOW_REMOTE=1` is explicitly set on the Fusion host. Use only in a trusted LAN — never bind to `0.0.0.0` on a host reachable from the public internet.
+**Security note:** TCP socket without authentication. The Python add-in rejects a non-loopback bind unless `FUSION_MCP_ALLOW_REMOTE=1` is set on the Fusion host. Use only in a trusted LAN — never bind to `0.0.0.0` on a host reachable from the public internet.
 
 ### 3. Verify the connection
 

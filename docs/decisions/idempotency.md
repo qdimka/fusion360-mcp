@@ -25,4 +25,4 @@ Rejected alternatives included an in-memory table (lost on restart), a journal i
 
 ## <a id="timeout-retry"></a>Do not blindly retry a timeout (2026-10-30, P0)
 
-The 30-second bridge timeout has two outcomes. If the queued handler has not started, the bridge cancels it and reports a known no-effect failure; the same operation may be attempted again with the same ID and arguments. If the response is lost after execution may have started, the outcome is unknown and the journal refuses a same-ID retry. Reconcile with scene queries and use a fresh ID for subsequent work. See [`protocol.md#timeout-cancel`](protocol.md#timeout-cancel).
+The 300-second bridge timeout has two outcomes. If the queued handler has not started, the bridge cancels it and reports a known no-effect failure; the same operation may be attempted again with the same ID and arguments. If the response is lost after execution may have started, the outcome is unknown and the journal refuses a same-ID retry. Reconcile with scene queries and use a fresh ID for subsequent work. See [`protocol.md#timeout-cancel`](protocol.md#timeout-cancel).

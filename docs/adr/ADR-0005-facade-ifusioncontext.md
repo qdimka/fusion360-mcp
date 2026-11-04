@@ -10,7 +10,7 @@ Command handlers use the thin `IFusionContext` facade over adsk (`activeDesign`,
 
 All adsk calls run on Fusion's main thread. Socket workers enqueue `WorkItem`s and post the `Fusion360MCP_BridgeEvent` CustomEvent; a 200 ms backup timer checks for undelivered events. Each socket worker waits on its own item completion signal. Lengths use centimetres and angles use radians (`Fusion360.Mcp.Core.Units.InternalUnits`).
 
-The bridge deadline is 30 seconds. A queued item that expires before its handler starts is marked cancelled and skipped by `DrainQueue`, so it cannot execute after the deadline. A handler already running cannot be interrupted.
+The bridge deadline is 300 seconds. A queued item that expires before its handler starts is marked cancelled and skipped by `DrainQueue`, so it cannot execute after the deadline. A handler already running cannot be interrupted.
 
 ## Rationale
 

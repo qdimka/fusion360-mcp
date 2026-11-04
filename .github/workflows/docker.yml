@@ -24,6 +24,10 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 10.0.x
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
 
       - name: Restore
         run: dotnet restore Fusion360Mcp.sln
@@ -35,6 +39,23 @@ jobs:
         run: |
           dotnet test tests/Fusion360.Mcp.Core.Tests/Fusion360.Mcp.Core.Tests.csproj -c Release --no-build
           dotnet test tests/Fusion360.Mcp.Server.Tests/Fusion360.Mcp.Server.Tests.csproj -c Release --no-build
+          python -m compileall -q addon/Fusion360MCP
+          python -m unittest discover -s tests/python_addin
+          python scripts/check_tool_parity.py
+          python scripts/check_guards.py
+      - name: Require live platform evidence for versioned image
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          version=$(sed -n 's:.*<Version>\([^<]*\)</Version>.*:\1:p' Directory.Build.props | head -n 1)
+          test "$GITHUB_REF_NAME" = "v$version"
+          grep -qx "Candidate version: $version" docs/status/e2e-stable-release.md
+          grep -qx 'Status: pass' docs/status/e2e-stable-release.md
+          grep -qx 'Windows: pass' docs/status/e2e-stable-release.md
+          grep -qx 'macOS: pass' docs/status/e2e-stable-release.md
+          python scripts/package_addin.py
+          expected=$(sed -n 's/^Add-in SHA256: //p' docs/status/e2e-stable-release.md)
+          actual=$(sha256sum dist/Fusion360MCP-python.zip | cut -d ' ' -f 1)
+          test "$expected" = "$actual"
 
   image:
     name: Build and publish GHCR image

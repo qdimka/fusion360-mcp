@@ -19,6 +19,9 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
       - name: Restore
         run: dotnet restore Fusion360Mcp.sln
       - name: Build
@@ -27,9 +30,15 @@ jobs:
         run: |
           dotnet test tests/Fusion360.Mcp.Core.Tests/Fusion360.Mcp.Core.Tests.csproj -c Release --no-build
           dotnet test tests/Fusion360.Mcp.Server.Tests/Fusion360.Mcp.Server.Tests.csproj -c Release --no-build
+      - name: Python add-in and contract checks
+        run: |
+          python -m compileall -q addon/Fusion360MCP
+          python -m unittest discover -s tests/python_addin -v
+          python scripts/check_tool_parity.py
+          python scripts/check_guards.py
+          python scripts/package_addin.py
 
-  # AddIn build: Windows-only, and only when adsk .NET assemblies are present
-  # in thirdparty/adsk/ (D3). AddIn.Tests are intentionally skipped in CI.
+  # The legacy C# add-in stays buildable until the Python E2E gate is complete.
   addin:
     runs-on: windows-latest
     steps:
@@ -49,39 +58,41 @@ jobs:
         if: steps.adsk.outputs.present == 'true'
         run: dotnet build src/Fusion360.Mcp.AddIn/Fusion360.Mcp.AddIn.csproj -c Release
 
-  release:
-    name: Publish versioned release
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: [build-test, addin]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
+  python-windows-install:
+    runs-on: windows-latest
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Read solution version
-        id: version
-        shell: bash
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install release zip twice
+        shell: pwsh
         run: |
-          version=$(sed -n 's:.*<Version>\([^<]*\)</Version>.*:\1:p' Directory.Build.props | head -n 1)
-          if [[ -z "$version" ]]; then
-            echo "Could not read <Version> from Directory.Build.props" >&2
-            exit 1
-          fi
-          echo "tag=v$version" >> "$GITHUB_OUTPUT"
+          python -m unittest discover -s tests/python_addin
+          python scripts/package_addin.py
+          Expand-Archive dist/Fusion360MCP-python.zip (Join-Path $env:RUNNER_TEMP 'FusionMcpPackage')
+          $env:FUSION_MCP_ADDINS_DIR = Join-Path $env:RUNNER_TEMP 'FusionMcpAddIns'
+          $installer = Join-Path $env:RUNNER_TEMP 'FusionMcpPackage/Fusion360MCP/install-addon.ps1'
+          & $installer
+          & $installer
+          if (-not (Test-Path (Join-Path $env:FUSION_MCP_ADDINS_DIR 'Fusion360MCP/server/command_handler.py'))) {
+            throw 'Python add-in installation is incomplete'
+          }
 
-      - name: Publish release if version is new
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG: ${{ steps.version.outputs.tag }}
+  python-macos-install:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install release zip twice
         run: |
-          if gh release view "$TAG" >/dev/null 2>&1; then
-            echo "Release $TAG already exists; skipping."
-            exit 0
-          fi
-
-          gh release create "$TAG" \
-            --target "$GITHUB_SHA" \
-            --generate-notes \
-            --title "$TAG"
+          python -m unittest discover -s tests/python_addin
+          python scripts/package_addin.py
+          mkdir -p "$RUNNER_TEMP/FusionMcpPackage"
+          unzip -q dist/Fusion360MCP-python.zip -d "$RUNNER_TEMP/FusionMcpPackage"
+          export FUSION_MCP_ADDINS_DIR="$RUNNER_TEMP/FusionMcpAddIns"
+          sh "$RUNNER_TEMP/FusionMcpPackage/Fusion360MCP/install-addon.sh"
+          sh "$RUNNER_TEMP/FusionMcpPackage/Fusion360MCP/install-addon.sh"
+          test -f "$FUSION_MCP_ADDINS_DIR/Fusion360MCP/server/command_handler.py"

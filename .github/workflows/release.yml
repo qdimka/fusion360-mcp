@@ -1,0 +1,93 @@
+name: Publish validated release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  verify-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Python release zip twice
+        shell: pwsh
+        run: |
+          python -m unittest discover -s tests/python_addin
+          python scripts/package_addin.py
+          Expand-Archive dist/Fusion360MCP-python.zip (Join-Path $env:RUNNER_TEMP 'FusionMcpPackage')
+          $env:FUSION_MCP_ADDINS_DIR = Join-Path $env:RUNNER_TEMP 'FusionMcpAddIns'
+          $installer = Join-Path $env:RUNNER_TEMP 'FusionMcpPackage/Fusion360MCP/install-addon.ps1'
+          & $installer
+          & $installer
+          if (-not (Test-Path (Join-Path $env:FUSION_MCP_ADDINS_DIR 'Fusion360MCP/server/command_handler.py'))) {
+            throw 'Python add-in installation is incomplete'
+          }
+
+  verify-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Python release zip twice
+        run: |
+          python -m unittest discover -s tests/python_addin
+          python scripts/package_addin.py
+          mkdir -p "$RUNNER_TEMP/FusionMcpPackage"
+          unzip -q dist/Fusion360MCP-python.zip -d "$RUNNER_TEMP/FusionMcpPackage"
+          export FUSION_MCP_ADDINS_DIR="$RUNNER_TEMP/FusionMcpAddIns"
+          sh "$RUNNER_TEMP/FusionMcpPackage/Fusion360MCP/install-addon.sh"
+          sh "$RUNNER_TEMP/FusionMcpPackage/Fusion360MCP/install-addon.sh"
+          test -f "$FUSION_MCP_ADDINS_DIR/Fusion360MCP/server/command_handler.py"
+
+  publish:
+    needs: [verify-windows, verify-macos]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify version and live platform evidence
+        shell: bash
+        run: |
+          version=$(sed -n 's:.*<Version>\([^<]*\)</Version>.*:\1:p' Directory.Build.props | head -n 1)
+          test "$GITHUB_REF_NAME" = "v$version"
+          grep -qx "Candidate version: $version" docs/status/e2e-stable-release.md
+          grep -qx 'Status: pass' docs/status/e2e-stable-release.md
+          grep -qx 'Windows: pass' docs/status/e2e-stable-release.md
+          grep -qx 'macOS: pass' docs/status/e2e-stable-release.md
+      - name: Build and test
+        run: |
+          dotnet restore Fusion360Mcp.sln
+          dotnet build Fusion360Mcp.sln -c Release --no-restore
+          dotnet test tests/Fusion360.Mcp.Core.Tests/Fusion360.Mcp.Core.Tests.csproj -c Release --no-build
+          dotnet test tests/Fusion360.Mcp.Server.Tests/Fusion360.Mcp.Server.Tests.csproj -c Release --no-build
+          python -m compileall -q addon/Fusion360MCP
+          python -m unittest discover -s tests/python_addin -v
+          python scripts/check_tool_parity.py
+          python scripts/check_guards.py
+      - name: Package server and Python add-in
+        run: bash scripts/publish.sh
+      - name: Verify tested add-in package hash
+        run: |
+          expected=$(sed -n 's/^Add-in SHA256: //p' docs/status/e2e-stable-release.md)
+          actual=$(sha256sum dist/Fusion360MCP-python.zip | cut -d ' ' -f 1)
+          test "$expected" = "$actual"
+      - name: Publish release assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" dist/*.zip dist/SHA256SUMS \
+            --target "$GITHUB_SHA" --generate-notes --title "$GITHUB_REF_NAME"

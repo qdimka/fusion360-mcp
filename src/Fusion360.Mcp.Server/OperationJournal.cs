@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Fusion360.Mcp.Core.Errors;
+using Fusion360.Mcp.Core.Protocol;
 
 namespace Fusion360.Mcp.Server;
 
@@ -117,8 +118,8 @@ public sealed class OperationJournal : IDisposable
     /// <summary>The journal file: a JSONL of intent/terminal lines in the journal directory.</summary>
     public string JournalPath { get; }
 
-    /// <summary>How long a barrier wait may last for an in-flight operation (covers the 30 s bridge timeout).</summary>
-    public TimeSpan BarrierTimeout { get; set; } = TimeSpan.FromSeconds(45);
+    /// <summary>How long a same-ID retry waits for the first 300 s bridge call and its client response.</summary>
+    public TimeSpan BarrierTimeout { get; set; } = ProtocolConstants.ClientTimeout + TimeSpan.FromSeconds(5);
 
     /// <summary>Creates a journal in <paramref name="directory"/> (created on demand).</summary>
     public OperationJournal(string directory)

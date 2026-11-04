@@ -1,4 +1,4 @@
-# Tool Listing — 92 C# tools + reference Python tools
+# Tool Listing — 92 MCP tools
 
 > **Generated file — do not edit by hand.**
 >
@@ -107,10 +107,10 @@
 | `cam_get_operation_info` | CAM / Manufacturing | Get details about a specific operation (strategy, tool, parameters, toolpath status) | ✓ |  | ✓ |
 | `render_view` | Perception | Capture the active viewport as a PNG so you can visually verify the model. Pass a canonical view (iso/front/top/etc.) to reposition the camera first, or 'current' to keep it as is. Returns base64-encoded image bytes alongside metadata; the MCP server delivers it as an image content block. | ✓ |  | ✓ |
 
-## Reference Python tools (not exposed by the C# server)
+## Upstream-only Python tools
 
-These tools are available in the upstream Python server/add-in and are
-not part of the C# server catalog above.
+The upstream Python project provides the tool below. This repository's
+C# MCP server and packaged Python add-in both reject it.
 
 | Tool | Group | Description |
 |---|---|---|

@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
-"""Generate the C# ToolCatalog data file from the reference Python catalog.
+"""Import a reviewed upstream Python tool catalog into the C# catalog.
 
 Reads ``reference/fusion360-mcp-server/src/fusion360_mcp/tools.py`` (the
 93-tool declarative catalog on the Python side; ``execute_code`` is an
 intentional exclusion from the C# product surface)
 and writes ``src/Fusion360.Mcp.Core/Catalog/tools_catalog.json`` — the
-single source of truth on the C# side (PLAN.md D6). The Core project embeds
-the JSON as a resource; the MCP server, mock responses, and the parity
-checker all consume the same data.
+single source of truth on the C# side. The Core project embeds the JSON as a
+resource; the MCP server and mock responses consume the same data. Release CI
+checks this file against the checked-in Python add-in and does not require an
+upstream clone.
 
-Re-run this script whenever the reference catalog changes, then run
-``scripts/check_tool_parity.py`` to prove the two sides still agree.
+Run this script only after reviewing an upstream catalog change, then run
+``scripts/check_tool_parity.py`` to prove the installed handler still agrees.
 """
 
 from __future__ import annotations

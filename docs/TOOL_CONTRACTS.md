@@ -105,7 +105,9 @@ such as exports are journaled to prevent duplicate side effects.
 
 Document mutation tools accept optional `expected_revision`. Obtain the
 current value from `get_scene_info.model_revision` or a prior mutation's
-`revision_after`. When it is stale, the operation is rejected with
+`revision_after`. An observed partial change also advances the Python
+add-in's revision, even though the mutation reports failure. When a supplied
+revision is stale, the operation is rejected with
 `REVISION_CONFLICT` before model changes and includes the current
 `revision_after`. Re-read the scene and retry with the current value. If a
 previously observed name no longer resolves after a scene change, the add-in

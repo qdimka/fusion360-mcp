@@ -45,6 +45,11 @@ public static class ResultFormatter
             {
                 lines.Add("  outcome_unknown: true");
             }
+            if (result["revision_after"] is JsonValue revisionValue &&
+                (revisionValue.TryGetValue<long>(out _) || revisionValue.TryGetValue<int>(out _)))
+            {
+                lines.Add($"  revision_after: {revisionValue.ToJsonString()}");
+            }
             // A failed mutation states partial_effects only when the change
             // was directly observed or no-effect was established.
             if (result.TryGetPropertyValue("partial_effects", out var partialNode) &&

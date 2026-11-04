@@ -11,9 +11,8 @@ How to build and run the MCP server in Docker on this machine
   inbound ports**. Its only network path is **outbound**: the container
   connects to the Fusion 360 add-in at `FUSION_MCP_HOST:PORT` (default
   `127.0.0.1:9876`; inside Docker Desktop that is `host.docker.internal:9876`).
-- The `.NET 4.8` Add-in and the `adsknet.dll` compile stub are **not** in the
-  image — they live inside Fusion on the host. `.dockerignore` excludes
-  `thirdparty/` accordingly.
+- The Python add-in is **not** in the image — install it inside Fusion on the
+  host using the platform script. The image contains only the C# MCP server.
 - The 92-tool catalog is embedded in the `Fusion360.Mcp.Core` assembly
   (`tools_catalog.json`), so `tools/list` works with no add-in connected.
 

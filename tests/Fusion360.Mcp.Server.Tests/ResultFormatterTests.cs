@@ -134,6 +134,22 @@ public class ResultFormatterTests
     }
 
     [Fact]
+    public void FormatResult_RevisionConflictShowsCurrentRevision()
+    {
+        var text = Text(ResultFormatter.FormatResult("create_box", new JsonObject
+        {
+            ["ok"] = false,
+            ["error_kind"] = "REVISION_CONFLICT",
+            ["error_message"] = "stale revision",
+            ["revision_after"] = 7,
+            ["partial_effects"] = false,
+        }));
+
+        Assert.Contains("revision_after: 7", text);
+        Assert.Contains("partial_effects: false", text);
+    }
+
+    [Fact]
     public void ConnectionErrorResult_SuggestsAddInIsRunning()
     {
         var formatted = ResultFormatter.ConnectionErrorResult("ping", new Exception("connection refused"));

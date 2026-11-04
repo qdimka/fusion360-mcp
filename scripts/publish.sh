@@ -5,11 +5,8 @@
 #      osx-x64, linux-x64) -> dist/Fusion360.Mcp.Server/<rid>/
 #      Self-contained (~80 MB, runtime bundled) — target machine needs
 #      no .NET install.
-#   2. Add-in install zip (net48, cross-platform: one binary works on
-#      Windows/macOS/Linux) -> dist/Fusion360MCP-addin.zip
-#      Contains the AddIns folder layout (Fusion360MCP/...) ready to be
-#      extracted into Fusion's AddIns directory; adsknet.dll stub and
-#      .pdb files are stripped (runtime resolves adsknet in-process).
+#   2. Python add-in zip for Windows and macOS -> dist/Fusion360MCP-python.zip
+#      Contains the AddIns folder layout (Fusion360MCP/...).
 #
 # Usage: ./scripts/publish.sh [rid ...]   (default: all four RIDs)
 
@@ -23,7 +20,6 @@ RIDS=("$@")
 [ "${#RIDS[@]}" -eq 0 ] && RIDS=(win-x64 osx-arm64 osx-x64 linux-x64)
 
 SERVER_PROJ="$REPO_DIR/src/Fusion360.Mcp.Server/Fusion360.Mcp.Server.csproj"
-ADDIN_PROJ="$REPO_DIR/src/Fusion360.Mcp.AddIn/Fusion360.Mcp.AddIn.csproj"
 
 echo "== Publishing MCP server (single-file, self-contained) =="
 for rid in "${RIDS[@]}"; do
@@ -31,20 +27,24 @@ for rid in "${RIDS[@]}"; do
     dotnet publish "$SERVER_PROJ" -c Release -r "$rid" \
         -p:SelfContained=true -p:PublishSingleFile=true -p:DebugType=none \
         -o "$DIST/Fusion360.Mcp.Server/$rid" --nologo
+    ( cd "$DIST/Fusion360.Mcp.Server" && zip -qr "$DIST/Fusion360.Mcp.Server-$rid.zip" "$rid" )
 done
 
-echo "== Packaging add-in (net48) =="
-rm -rf "$DIST/addin-staging"
-dotnet build "$ADDIN_PROJ" -c Release -o "$DIST/addin-staging/build" --nologo
-STAGE="$DIST/addin-staging/Fusion360MCP"
-rm -rf "$STAGE"
-mkdir -p "$STAGE"
-cp -R "$DIST/addin-staging/build/." "$STAGE/"
-# Never ship the adsknet compile-time stub or debug symbols into AddIns:
-# at runtime the add-in resolves adsknet in-process from the Fusion runtime.
-rm -f "$STAGE"/adsknet.dll "$STAGE"/*.pdb "$STAGE"/Microsoft.CodeAnalysis*.dll
-( cd "$DIST/addin-staging" && zip -qr "$DIST/Fusion360MCP-addin.zip" Fusion360MCP )
-rm -rf "$DIST/addin-staging"
+echo "== Packaging Python add-in =="
+python3 "$REPO_DIR/scripts/package_addin.py"
+
+echo "== Writing SHA256SUMS =="
+python3 - "$DIST" <<'PY'
+import hashlib
+from pathlib import Path
+import sys
+root = Path(sys.argv[1])
+files = sorted(root.glob('*.zip'))
+(root / 'SHA256SUMS').write_text(''.join(
+    f'{hashlib.sha256(path.read_bytes()).hexdigest()}  {path.relative_to(root)}\n'
+    for path in files
+))
+PY
 
 echo ""
 echo "Artifacts in $DIST:"

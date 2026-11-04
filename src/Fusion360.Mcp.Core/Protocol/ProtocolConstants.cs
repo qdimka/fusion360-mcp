@@ -9,7 +9,7 @@ namespace Fusion360.Mcp.Core.Protocol;
 /// </summary>
 public static class ProtocolConstants
 {
-    // INVARIANT: ClientTimeout (45 s) > BridgeTimeout (30 s) so a structured TIMEOUT
+    // INVARIANT: ClientTimeout (310 s) > BridgeTimeout (300 s) so a structured TIMEOUT
     // arrives before the client gives up. History: docs/decisions/protocol.md#timeouts
 
     /// <summary>Default add-in host (override with FUSION_MCP_HOST).</summary>
@@ -28,17 +28,17 @@ public static class ProtocolConstants
     public const string PortEnvVar = "FUSION_MCP_PORT";
 
     /// <summary>
-    /// Client command timeout in seconds. Must exceed the add-in's 30s
+    /// Client command timeout in seconds. Must exceed the add-in's 300s
     /// bridge timeout so a structured TIMEOUT response arrives before the
-    /// client gives up (reference connection.py: _TIMEOUT = 45.0).
+    /// client gives up.
     /// </summary>
-    public const int ClientTimeoutSeconds = 45;
+    public const int ClientTimeoutSeconds = 310;
 
     /// <summary>Client command timeout as a TimeSpan (see <see cref="ClientTimeoutSeconds"/>).</summary>
     public static readonly TimeSpan ClientTimeout = TimeSpan.FromSeconds(ClientTimeoutSeconds);
 
     /// <summary>Add-in bridge timeout for one command (event_bridge.submit).</summary>
-    public static readonly TimeSpan BridgeTimeout = TimeSpan.FromSeconds(30);
+    public static readonly TimeSpan BridgeTimeout = TimeSpan.FromSeconds(300);
 
     /// <summary>Short timeout (seconds) for connect + ping health checks.</summary>
     public const int PingTimeoutSeconds = 5;

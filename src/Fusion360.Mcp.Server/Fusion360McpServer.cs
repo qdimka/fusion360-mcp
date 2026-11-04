@@ -147,7 +147,7 @@ public sealed class Fusion360McpServer
 
         try
         {
-            // The backend blocks (socket connect / 45s command timeout), so
+            // The backend blocks (socket connect / 310s command timeout), so
             // keep the MCP request loop off it.
             var result = await Task.Run(() => _backend.Invoke(name, arguments));
             return ResultFormatter.FormatResult(name, result);

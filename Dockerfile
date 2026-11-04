@@ -1,7 +1,7 @@
 # fusion360-mcp MCP server (stdio) — multi-stage image.
 #
-# Build:  mcr SDK 10 (only the net10 MCP server is built; the net48 Add-in
-#         and the adsk stub DLL are NOT part of this image).
+# Build:  mcr SDK 10 (only the net10 MCP server is built; the Python Fusion
+#         add-in is installed separately on the host and is not in this image).
 # Runtime: mcr aspnet 10. The server is a stdio process — no inbound ports;
 #         it talks to the Fusion 360 add-in OUTBOUND via FUSION_MCP_HOST:PORT
 #         (default 127.0.0.1:9876; on Docker Desktop use host.docker.internal).

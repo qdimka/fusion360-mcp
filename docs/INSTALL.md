@@ -4,7 +4,8 @@ Use these steps when an AI coding agent installs the server for you.
 
 ## Prerequisites
 
-- Fusion 360 for Windows for the C# add-in.
+- Fusion 360 on Windows or macOS. The checked-in Python add-in is still awaiting
+  a recorded live Windows E2E run for the stable release.
 - .NET 10 SDK when building from source.
 - Docker Desktop when using the container image.
 - An MCP client such as Claude Code, OpenCode, Codex, or Cursor.
@@ -15,21 +16,27 @@ Use these steps when an AI coding agent installs the server for you.
 1. Check the platform where Fusion 360 is running.
 2. Install the add-in for that Fusion host:
 
-   **macOS** (reference Python add-in; clone it once from the repository root):
+   **macOS** (checked-in Python add-in, from the repository root):
 
    ```bash
-   mkdir -p reference
-   git clone https://github.com/faust-machines/fusion360-mcp-server reference/fusion360-mcp-server
    ./scripts/install-addon.sh
    ```
 
-   **Windows** (C# add-in):
+   **Windows** (the same Python add-in):
 
    ```powershell
    powershell -ExecutionPolicy Bypass -File scripts\install-addon.ps1
    ```
 
-3. Start Fusion 360 and run **Shift+S → Add-Ins → Fusion360MCP → Run** if the add-in did not start automatically.
+   For a release download, extract `Fusion360MCP-python.zip` outside the
+   AddIns directory and run `Fusion360MCP/install-addon.sh` with `sh` on
+   macOS or `Fusion360MCP\install-addon.ps1` with PowerShell on Windows.
+   Both installers are included in the zip.
+
+3. If upgrading from the C# add-in, stop it before replacing its installed
+   folder. Keep the server's operation journal. Start or restart Fusion 360,
+   then run **Shift+S → Add-Ins → Fusion360MCP → Run**; the Python manifest
+   does not enable autostart.
 4. Confirm that Fusion's TEXT COMMANDS window shows:
 
    ```text
@@ -70,7 +77,12 @@ Use these steps when an AI coding agent installs the server for you.
 
 ## macOS and remote Fusion hosts
 
-On macOS, `./scripts/install-addon.sh` installs the reference Python add-in for a local Fusion connection. The C# add-in is Windows-only. Docker with `--mode mock` is available without a Fusion host. For a remote host, set `FUSION_MCP_HOST` and `FUSION_MCP_PORT` on the server side, and explicitly enable `FUSION_MCP_ALLOW_REMOTE=1` on the Fusion host before binding to a non-loopback address.
+Both installers copy the checked-in Python add-in by default; their symlink
+options are for development. Docker with `--mode mock` is available without a
+Fusion host. For a remote Fusion host, set `FUSION_MCP_HOST` and optionally
+`FUSION_MCP_PORT` on the server, and set both `FUSION_MCP_HOST` to the bind
+address and `FUSION_MCP_ALLOW_REMOTE=1` on the Fusion host. The TCP connection
+has no authentication, so use only a trusted network.
 
 ## Safety rules for the agent
 

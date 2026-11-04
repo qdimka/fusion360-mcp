@@ -1,6 +1,11 @@
 # Protocol — decisions and implementation notes
 
-Modules: protocol models and codec in `src/Fusion360.Mcp.Core/Protocol/`, plus the add-in bridge in `src/Fusion360.Mcp.AddIn/` (`SocketServer`, `EventBridge`). This file records design history; current wire behavior is described in [`TOOL_CONTRACTS.md`](../TOOL_CONTRACTS.md). Active invariants remain in code comments marked `INVARIANT`, `MEASURED`, `DOC`, or `LIMIT`.
+Modules: protocol models and codec in `src/Fusion360.Mcp.Core/Protocol/`,
+with the candidate Python bridge in `addon/Fusion360MCP/server/`. The former
+C# bridge remains under `src/Fusion360.Mcp.AddIn/` pending live migration
+checks. This file records design history; current wire behavior is described
+in [`TOOL_CONTRACTS.md`](../TOOL_CONTRACTS.md). Active invariants remain in
+code comments marked `INVARIANT`, `MEASURED`, `DOC`, or `LIMIT`.
 
 ## <a id="envelope"></a>Baseline result and additive mutation fields (2026-10-30, P0)
 
@@ -8,11 +13,11 @@ The baseline result used `ok: true` plus tool-specific fields and optional mutat
 
 ## <a id="timeouts"></a>Timeout values (T2)
 
-Timeout values are centralized in `ProtocolConstants.cs`: bridge command timeout 30 seconds, client timeout 45 seconds, ping timeout 5 seconds, retry delay 1 second, bridge backup timer 200 ms, server restart delay 2 seconds, at most 10 accept-loop restarts, and a 64 KiB receive buffer. The client timeout exceeds the bridge timeout so a structured timeout can normally arrive before the client gives up.
+Timeout values are centralized in `ProtocolConstants.cs`: bridge command timeout 300 seconds, client timeout 310 seconds, ping timeout 5 seconds, retry delay 1 second, bridge backup timer 200 ms, server restart delay 2 seconds, at most 10 accept-loop restarts, and a 64 KiB receive buffer. The client timeout exceeds the bridge timeout so a structured timeout can normally arrive before the client gives up. The checked-in Python add-in uses the same 300-second bridge timeout.
 
 ## <a id="timeout-cancel"></a>Cancel expired queued work rather than executing it later (T3)
 
-If a queued command reaches the 30-second bridge deadline before its handler starts, the waiting socket worker marks it cancelled. `DrainQueue` skips cancelled items, preventing late execution after the caller has received a timeout. The bridge cannot interrupt a handler that has already started.
+If a queued command reaches the 300-second bridge deadline before its handler starts, the waiting socket worker marks it cancelled. `DrainQueue` skips cancelled items, preventing late execution after the caller has received a timeout. The bridge cannot interrupt a handler that has already started.
 
 The result distinguishes these cases: a command cancelled before execution is a known no-effect failure with `partial_effects: false`; if an in-progress result is lost, the operation outcome is unknown. In the latter case, inspect the scene before issuing another mutation.
 

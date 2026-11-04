@@ -82,7 +82,7 @@ public static class ErrorClassifier
         }),
         new Rule("timeout", ErrorKind.Timeout, new[]
         {
-            "The operation exceeded the 30s bridge timeout.",
+            "The operation exceeded the 300s bridge timeout.",
             "If a long operation is expected (CAM toolpath, complex fillet), split it into smaller steps.",
         }),
         new Rule("requires (?:parametric|direct[- ]edit)|not (?:supported|permitted|allowed) in (?:parametric|direct[- ]edit)|switch to (?:parametric|direct[- ]edit)", ErrorKind.DesignTypeMismatch, new[]

@@ -9,8 +9,7 @@ MCP client
 Fusion360.Mcp.Server (.NET 10)
   │ TCP localhost:9876, newline-delimited JSON
   ▼
-Fusion360MCP add-in (C# .NET Framework 4.8 on Windows,
-                    reference Python add-in on macOS)
+Fusion360MCP add-in (checked-in Python package on Windows/macOS)
   │ Fusion CustomEvent
   ▼
 Fusion main thread and API
@@ -44,8 +43,8 @@ authentication, so only use a trusted network.
 Socket workers never call the Fusion API directly. They submit work to a
 queue, wait for the main-thread event, and receive that item's result. A backup
 timer checks overdue queued items every 200 ms in case Fusion did not deliver
-the event. The bridge timeout is 30 seconds; the server's client timeout is
-45 seconds, leaving time for a structured timeout response.
+the event. The bridge timeout is 300 seconds; the server's client timeout is
+310 seconds, leaving time for a structured timeout response.
 
 A command that has not started when the bridge deadline expires is cancelled
 and reported as a known no-effect timeout. A handler already running cannot
@@ -66,6 +65,8 @@ Document mutations can also supply `expected_revision`. The add-in rejects a
 stale revision before changing the model and returns the current revision.
 See [ADR-0011](adr/ADR-0011-lightweight-revisioning.md).
 
-The add-in reports mutation deltas and an optional verification block. The
-verification level states the strongest check actually completed; it does
-not claim that every aspect of a command was verified.
+The add-in reports mutation deltas where available and an optional
+verification block. The Python add-in emits `existence_checked` for returned
+body/sketch names it can resolve, or `call_returned` otherwise. Geometry
+read-back checks remain release work. The
+verification level states only a check actually completed.

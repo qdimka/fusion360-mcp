@@ -228,7 +228,7 @@ public sealed class Fusion360Connection : IDisposable
                     new[]
                     {
                         "Verify the scene with get_scene_info before re-issuing the operation.",
-                        "Long operations (CAM toolpaths, complex fillets) exceed the add-in's 30 s " +
+                        "Long operations (CAM toolpaths, complex fillets) may exceed the add-in's 300 s " +
                         "bridge timeout — split them into smaller steps.",
                     },
                     innerException: ex,
@@ -258,7 +258,7 @@ public sealed class Fusion360Connection : IDisposable
                     new[]
                     {
                         "Verify the scene with get_scene_info before re-issuing the operation.",
-                        "Long operations (CAM toolpaths, complex fillets) exceed the add-in's 30 s " +
+                        "Long operations (CAM toolpaths, complex fillets) may exceed the add-in's 300 s " +
                         "bridge timeout — split them into smaller steps.",
                     },
                     innerException: ex,

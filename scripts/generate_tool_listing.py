@@ -123,7 +123,7 @@ def build_markdown(catalog: list[dict]) -> str:
         raise ValueError(f"GROUPS entries absent from catalog: {stale}")
 
     lines = [
-        f"# Tool Listing — {len(catalog)} C# tools + reference Python tools",
+        f"# Tool Listing — {len(catalog)} MCP tools",
         "",
         "> **Generated file — do not edit by hand.**",
         ">",
@@ -156,10 +156,10 @@ def build_markdown(catalog: list[dict]) -> str:
             )
     lines.extend([
         "",
-        "## Reference Python tools (not exposed by the C# server)",
+        "## Upstream-only Python tools",
         "",
-        "These tools are available in the upstream Python server/add-in and are",
-        "not part of the C# server catalog above.",
+        "The upstream Python project provides the tool below. This repository's",
+        "C# MCP server and packaged Python add-in both reject it.",
         "",
         "| Tool | Group | Description |",
         "|---|---|---|",
