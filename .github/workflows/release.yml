@@ -53,6 +53,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0'
@@ -68,6 +70,11 @@ jobs:
           grep -qx 'Status: pass' docs/status/e2e-stable-release.md
           grep -qx 'Windows: deferred (post-release)' docs/status/e2e-stable-release.md
           grep -qx 'macOS: pass' docs/status/e2e-stable-release.md
+          source=$(sed -n 's/^Candidate source commit: //p' docs/status/e2e-stable-release.md)
+          test -n "$source"
+          git merge-base --is-ancestor "$source" "$GITHUB_SHA"
+          unexpected=$(git diff --name-only "$source" "$GITHUB_SHA" -- . ':!docs/**' ':!README.md')
+          test -z "$unexpected"
       - name: Build and test
         run: |
           dotnet restore Fusion360Mcp.sln
@@ -82,9 +89,13 @@ jobs:
         run: bash scripts/publish.sh
       - name: Verify tested add-in package hash
         run: |
-          expected=$(sed -n 's/^Add-in SHA256: //p' docs/status/e2e-stable-release.md)
-          actual=$(sha256sum dist/Fusion360MCP-python.zip | cut -d ' ' -f 1)
-          test "$expected" = "$actual"
+          version=$(sed -n 's:.*<Version>\([^<]*\)</Version>.*:\1:p' Directory.Build.props | head -n 1)
+          python scripts/check_release_evidence.py \
+            --evidence docs/status/e2e-stable-release.md \
+            --version "$version" \
+            --addin-zip dist/Fusion360MCP-python.zip \
+            --server win-x64=dist/Fusion360.Mcp.Server-win-x64.zip \
+            --server osx-arm64=dist/Fusion360.Mcp.Server-osx-arm64.zip
       - name: Publish release assets
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

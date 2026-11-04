@@ -1,7 +1,8 @@
 # Project status
 
-Updated 2026-11-04. The published product remains beta (`0.1.0` in
-`Directory.Build.props`). The C# MCP server exposes 92 tools. A pinned Python
+Updated 2026-11-04. No stable release has been published; the project remains
+beta. The current release candidate is version `1.0.0` in `Directory.Build.props`.
+The C# MCP server exposes 92 tools. A pinned Python
 Fusion add-in and installers for Windows and macOS are committed in `1750af1` as
 a release candidate. The Python add-in is the only Fusion add-in in the source
 tree. Windows live Fusion E2E is scheduled after release; Windows installer CI

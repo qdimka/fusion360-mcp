@@ -3,8 +3,11 @@
 Status: pending
 Windows: deferred (post-release)
 macOS: pending
-Candidate version: pending
+Candidate version: 1.0.0
+Candidate source commit: pending
 Add-in SHA256: pending
+Server win-x64 SHA256: pending
+Server osx-arm64 SHA256: pending
 
 Windows Fusion E2E has not been run because a Windows Fusion host is currently
 unavailable. Per the release decision, this live matrix is deferred until after

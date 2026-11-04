@@ -9,7 +9,7 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <!-- P6 governance (docs/GOVERNANCE.md): single version for the solution;
          semver decided by the MCP contract (release table). -->
-    <Version>0.1.0</Version>
+    <Version>1.0.0</Version>
   </PropertyGroup>
 
 </Project>
