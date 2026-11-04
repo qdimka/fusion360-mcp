@@ -8,7 +8,7 @@
 
 > **Beta** — under active development. The API and tool behavior may change between releases.
 
-The C# server exposes **92 typed MCP tools**, including `ping` for a connection health check. The upstream Python server also provides `execute_code`; this C# server and its packaged add-in reject that command. The Python add-in is the only Fusion implementation. macOS live E2E is a release gate; Windows installer CI is required before release and Windows live Fusion E2E follows after release. See the [release task](docs/tasks/python-addin-stable-release.md).
+The C# server exposes **92 typed MCP tools**, including `ping` for a connection health check. The upstream Python server also provides `execute_code`; this server and the packaged add-in reject that command. The Python add-in is the only Fusion implementation. macOS live E2E is a release gate; Windows installer CI is required before release and Windows live Fusion E2E follows after release. See the [release task](docs/tasks/python-addin-stable-release.md).
 
 ## How it works
 
@@ -23,8 +23,8 @@ The project has two components:
 
 ## Prerequisites
 
-- Autodesk Fusion 360 on Windows or macOS. Live validation of this packaged Python add-in on Windows is still pending.
-- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) when building or running from source.
+- Autodesk Fusion 360 on Windows or macOS. Windows installer CI is required before release; live Windows Fusion E2E is scheduled after release.
+- [.NET 10 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/10.0) when building or running from source.
 - Docker Desktop when using the container image.
 - An MCP-compatible client such as Claude Code, OpenCode, Codex, or Cursor.
 - A TCP connection from the MCP server host to the Fusion add-in on port `9876`.
@@ -146,8 +146,8 @@ docker build -t fusion360-mcp:local .
 
 GitHub Actions builds and tests the solution on pull requests and pushes to `main`.
 A versioned GitHub Release is created only from a pushed `v<version>` tag
-matching `Directory.Build.props`, after the Windows/macOS E2E evidence file
-records passing candidate runs. The release attaches server archives, the
+matching `Directory.Build.props`, after macOS candidate E2E passes and Windows installer CI succeeds. Windows
+live Fusion E2E is deferred until after release. The release attaches server archives, the
 Python add-in zip, and checksums. The Docker workflow publishes the main branch
 image as `ghcr.io/OWNER/REPOSITORY:main` and `:latest`, and publishes versioned images
 for pushed `v*` tags.

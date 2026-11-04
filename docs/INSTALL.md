@@ -4,8 +4,8 @@ Use these steps when an AI coding agent installs the server for you.
 
 ## Prerequisites
 
-- Fusion 360 on Windows or macOS. The checked-in Python add-in is still awaiting
-  a recorded live Windows E2E run for the stable release.
+- Fusion 360 on Windows or macOS. Windows installer CI is required before
+  release; live Windows Fusion E2E is scheduled after release.
 - .NET 10 SDK when building from source.
 - Docker Desktop when using the container image.
 - An MCP client such as Claude Code, OpenCode, Codex, or Cursor.
@@ -35,8 +35,8 @@ Use these steps when an AI coding agent installs the server for you.
 
 3. If an older C# add-in is installed, stop or remove it in Fusion before
    starting the Python add-in. This repository no longer builds or distributes
-   the C# add-in. Keep the server's operation journal. Start or restart Fusion 360,
-   then run **Shift+S → Add-Ins → Fusion360MCP → Run**; the Python manifest
+   the C# add-in. Keep the server's operation journal. Start or restart Fusion
+   360, then run **Shift+S → Add-Ins → Fusion360MCP → Run**; the Python manifest
    does not enable autostart.
 4. Confirm that Fusion's TEXT COMMANDS window shows:
 
