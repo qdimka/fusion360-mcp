@@ -38,3 +38,21 @@ Preliminary Windows Fusion: pending (host unavailable).
 Local journal gate: 28 filtered `IdempotentToolBackendTests` and
 `OperationJournalTests` passed on 2026-11-04. This does not replace either
 live Fusion platform run.
+
+## Preliminary macOS run — 2026-11-04 (incomplete)
+
+macOS 15.7.4, Fusion 2706.1.17, saved design `Codex MCP E2E candidate
+2026-11-04`; add-in zip SHA-256 `76a29dd19aadc0622a7b1d601fb883b01deb9356ebdf1f86bc0ed1cd8fbdb001` from the preliminary source above. The connected MCP server binary has not been identified as a versioned candidate, so this is preliminary evidence only.
+
+- `ping` returned `pong`; initial `get_scene_info` reported revision 0, zero bodies and sketches. `get_design_type {}` returned parametric.
+- `create_sketch {"plane":"xy","expected_revision":0,"operation_id":"64fb8b63-0f33-4a23-9899-5c859ed153ab"}` returned Sketch1, revision 1. `draw_rectangle {"width":2,"height":1,"expected_revision":1,"operation_id":"bd5dd5af-05bd-4078-8c5f-88ec685fba44"}` created one profile, revision 2. `extrude {"height":1,"profile_index":0,"operation":"new_body","expected_revision":2,"operation_id":"0f9f34b0-406c-40eb-b86a-d7d320ee7ffb"}` returned Extrude1, revision 3; Body1 measured 2 cm³ and 10 cm².
+- Repeating that exact extrude returned the original result with one body and revision 3; changing height to 2 with the same ID returned `OPERATION_ID_CONFLICT`, leaving the scene unchanged. `create_sketch` with revision 0 and ID `406f40d1-178e-41ee-9c47-70101af5ae70` returned `REVISION_CONFLICT`, `partial_effects: false`; scene and revision remained unchanged.
+- `move_body {"body_name":"Body1","x":1,"expected_revision":3,"operation_id":"12cdb86f-5de4-4655-bc4d-421a699fb646"}` advanced revision to 4; bounding box became [1,0,0]–[3,1,1]. `create_box {"length":2,"width":1,"height":1,"center_x":6,"expected_revision":4,"operation_id":"ab527542-855c-4f6a-9546-40af67b9f180"}` created Body2, revision 5. `create_construction_plane {"method":"offset","plane":"xy","offset":2,"expected_revision":5,"operation_id":"007f9985-aec2-4bb0-992b-8775d6670a8c"}` returned Plane1, revision 6.
+- `create_component {"name":"E2EComponent","expected_revision":6,"operation_id":"bb3fb6b7-44ad-4f1b-a441-c64bc991b7fe"}` failed: Fusion Part Design documents allow only one component. Scene remained at revision 6; the response marked the outcome unknown. A valid Assembly precondition remains to be tested.
+- `set_color {"body_name":"Body1","red":255,"green":0,"blue":0,"expected_revision":6,"operation_id":"9020e89d-28d4-4c27-b324-46b5e5d54e16"}` returned red, revision 7; image showed a red body. `create_parameter {"name":"E2E_Length","value":10,"unit":"mm","expected_revision":7,"operation_id":"b0243737-8357-411d-a663-63e293bf90ec"}` returned `10 mm`, revision 8; `get_parameters` confirmed the expression.
+- A separate Sketch2 and rectangle (IDs `b9901d09-39f3-47cc-a297-1fbc3d9c9927`, `fa261497-fee0-4efb-93e8-8816f0413ae4`, revisions 9–10) provided a closed profile. `patch_surface {"sketch_name":"Sketch2","profile_index":0,"continuity":"connected","expected_revision":10,"operation_id":"f2f86835-41dd-459e-b416-453a3e355c61"}` produced SurfacePatch1 and Body3, revision 11.
+- `get_physical_properties {"body_name":"Body1","accuracy":"medium"}` returned volume 2, mass 0.0157 and center [2,0.5,0.5]; `cam_list_setups {}` returned an empty list. `export_f3d {"file_path":"/private/tmp/fusion-mcp-e2e-candidate.f3d","operation_id":"e635119b-7eb4-4ac3-b9a3-cc3c3cf1e545"}` produced a 91 KB F3D archive. `render_view {"view":"current","width":640,"height":480,"fit":false}` returned a PNG.
+- **Defect:** after `cam_list_setups`, `render_view {"view":"iso","width":640,"height":480,"fit":true}` failed with `'CAM' object has no attribute 'rootComponent'`. This candidate did not pass the matrix. A regression and fix require a rebuilt candidate and live retest.
+- Invalid `move_body` for `E2E_Missing` with revision 11 and ID `ee1565cf-f011-4522-b374-ef4be847e66d` returned `BODY_NOT_FOUND`, `outcome_unknown: true`; the scene and revision remained unchanged.
+
+Sheet-metal flat pattern, component creation in an Assembly, network, restart and full candidate-server checks remain pending. No Windows Fusion E2E has run.
