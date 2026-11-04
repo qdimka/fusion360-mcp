@@ -49,6 +49,7 @@ independently checkable changes.
 | Candidate version and packaging | `Directory.Build.props`, `addon/Fusion360MCP/Fusion360MCP.manifest`, `scripts/package_addin.py`, `scripts/publish.sh`, planned scripts/check_release_evidence.py, `.github/workflows/release.yml`, `.github/workflows/docker.yml` |
 | Live runbook and evidence | `docs/E2E-STATUS.md`, `docs/status/e2e-stable-release.md`, `docs/status/python-addin-compatibility.md` |
 | Legacy removal after preliminary platform pass | `src/Fusion360.Mcp.AddIn/`, `tests/Fusion360.Mcp.AddIn.Tests/`, `thirdparty/adsk/`, `Fusion360Mcp.sln`, `Directory.Build.props`, `.github/workflows/ci.yml`, `scripts/check_guards_baseline.json` |
+| Documentation and agent-file audit | `README.md`, `AGENTS.md`, all active `docs/**/*.md`, any other repository agent instruction files, and `scripts/check_guards.py` |
 | Final user documentation and release | `README.md`, `docs/INSTALL.md`, `docs/ARCHITECTURE.md`, `docs/DOCKER.md`, `docs/TOOLS.md`, `docs/STATUS.md`, `docs/GOVERNANCE.md`, `docs/adr/*.md`, `docs/decisions/*.md`, `.github/workflows/release.yml`, `.github/workflows/docker.yml` |
 
 ### Task 1: Close static contract and installer gaps
@@ -84,7 +85,7 @@ independently checkable changes.
 
 - [ ] **Step 1:** Compare `tests/Fusion360.Mcp.AddIn.Tests/` with `tests/python_addin/test_contract.py`. Add Python tests for any missing revision conflict, stale reference, timeout, partial-effect, verification, or remote-bind assertion, and run the Python suite before deleting the C# tests.
 - [ ] **Step 2:** Remove `src/Fusion360.Mcp.AddIn/`, `tests/Fusion360.Mcp.AddIn.Tests/`, and `thirdparty/adsk/`; remove their solution, `net48`, and CI references. Keep the server/Core and historical ADRs.
-- [ ] **Step 3:** Update current guides to the sole Python add-in and annotate historical decisions that describe the retired paths. Regenerate `docs/TOOLS.md` if its generator or catalog changes.
+- [ ] **Step 3:** Update current guides to the sole Python add-in, annotate historical decisions that describe retired paths, and complete the documentation and agent-file audit in Task 5a of the [remaining-tasks plan](stable-release-next-steps.md). Regenerate `docs/TOOLS.md` if its generator or catalog changes.
 - [ ] **Step 4:** Choose the stable candidate version (proposed `1.0.0`), set the same value in `Directory.Build.props` and `Fusion360MCP.manifest`, then run `bash scripts/publish.sh`. Record the resulting artifact hashes; any later source or package change requires rebuilding and rechecking affected E2E rows.
 - [ ] **Step 5:** Run a clean checkout build, Core/Server tests, Python tests, parity, guards, installer jobs, and `git diff --check`. Require no `net48` or adsk dependency in the active solution. Commit the candidate before final E2E.
 

@@ -41,6 +41,7 @@
 | Journal behavior | `src/Fusion360.Mcp.Server/IdempotentToolBackend.cs`, `OperationJournal.cs`, matching tests in `tests/Fusion360.Mcp.Server.Tests/` |
 | Compatibility evidence | `docs/E2E-STATUS.md`, `docs/status/e2e-stable-release.md`, `docs/status/python-addin-compatibility.md` |
 | Legacy retirement | `Fusion360Mcp.sln`, `Directory.Build.props`, `.github/workflows/ci.yml`, legacy add-in and test directories, current guides, historical ADRs |
+| Documentation and agent-file audit | `README.md`, `AGENTS.md`, active `docs/**/*.md`, any other repository agent instructions, `scripts/check_guards.py` |
 | Candidate packaging | `scripts/publish.sh`, `scripts/package_addin.py`, `Directory.Build.props`, `addon/Fusion360MCP/Fusion360MCP.manifest` |
 | Release evidence check | New scripts/check_release_evidence.py and new tests/python_addin/test_release_evidence.py; `.github/workflows/release.yml`, `.github/workflows/docker.yml` |
 
@@ -102,7 +103,21 @@
 - [ ] **Step 4: Repair current documentation.** Update `README.md`, `docs/INSTALL.md`, `docs/ARCHITECTURE.md`, `docs/STATUS.md`, and active scripts for Python-only install, upgrade, uninstall, troubleshooting, journal persistence, and network exposure. Keep historical ADRs but add a concise supersession note where needed.
 - [ ] **Step 5: Verify and commit.** Run `dotnet restore Fusion360Mcp.sln`, `dotnet build Fusion360Mcp.sln -c Release`, Core/Server tests, Python tests, parity, guards, and `rg -n 'Fusion360.Mcp.AddIn|net48|thirdparty/adsk' Fusion360Mcp.sln Directory.Build.props .github/workflows README.md docs/INSTALL.md docs/ARCHITECTURE.md`. The build/tests must pass; the final `rg` must find no active dependency. Commit removal separately.
 
+### Task 5a: Audit documentation and agent instructions
+
+**Files:** Review `README.md`, `AGENTS.md`, all active Markdown files under `docs/`, and any other repository `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, or `SKILL.md` found by inventory. Modify `scripts/check_guards.py`; create tests/python_addin/test_docs_guard.py for the expanded link check. Record unresolved findings in `docs/status/TECH_DEBT.md` only when they are not release blockers.
+
+**Interfaces:** `check_doc_links(paths: Iterable[Path] | None = None) -> list[str]` in `scripts/check_guards.py` validates the supplied Markdown paths for tests; with no argument it scans `docs/**/*.md`, root `README.md`, and discovered repository agent instruction files. Historical ADRs may retain old paths only with an explicit supersession note; current user and agent instructions must point to the Python add-in and current plan/spec locations.
+
+- [ ] **Step 1: Inventory the files.** Run `rg --files --hidden -g '*.md' -g '!**/.git/**' -g '!reference/**' -g '!dist/**` and separately `rg --files --hidden -g 'AGENTS.md' -g 'CLAUDE.md' -g 'GEMINI.md' -g 'SKILL.md' -g '!**/.git/**' -g '!reference/**'`. Review every returned active guide and agent file; record historical ADRs separately from current instructions.
+- [ ] **Step 2: Find stale references.** Run `rg -n -i 'reference/fusion360|Fusion360.Mcp.AddIn|net48|thirdparty/adsk|docs/release|0\.1\.0|beta|reload_handler|windows.only|macOS reference' README.md AGENTS.md docs .github`. Classify each hit as current, intentionally historical, or obsolete. Correct obsolete paths, commands, platform/version claims, and C# install directions; add a supersession note to a historical page when its old path could be mistaken for current guidance.
+- [ ] **Step 3: Expand local-link coverage.** In tests/python_addin/test_docs_guard.py, add `test_root_readme_missing_link_is_reported`, `test_agent_file_missing_link_is_reported`, and `test_valid_relative_link_resolves`, using temporary Markdown files and `check_doc_links(paths=...)`. Add `test_default_scan_includes_readme_and_agent_files` with a temporary repository root and no `paths` argument. Run `python3.12 -m unittest discover -s tests/python_addin -p 'test_docs_guard.py' -v` and confirm red, then add the optional `paths` parameter and the default README/agent-file inventory to `scripts/check_guards.py`. Preserve the existing rule that local `.md`, `.py`, and `.cs` targets must exist; rerun the four tests and require green.
+- [ ] **Step 4: Check external links and formatting.** Extract HTTP(S) links from current guides and agent files, visit each target, and record any 404, moved page, or authentication-only result; replace obsolete URLs with canonical destinations. Inspect headings, list spacing, fenced code blocks, Markdown tables, and rendered links in `README.md`, `AGENTS.md`, `docs/INSTALL.md`, `docs/ARCHITECTURE.md`, and the pages changed by this audit. Fix rendering errors without rewriting historical content unnecessarily.
+- [ ] **Step 5: Verify and commit.** Run `python3 scripts/check_guards.py`, `python3.12 -m unittest discover -s tests/python_addin -p 'test_docs_guard.py' -v`, `git diff --check`, and the stale-reference search again. Require zero broken active links, zero unexplained stale references, and no formatting defects in reviewed pages. Commit the documentation, agent-file, and guard fixes separately before Task 6 packages the candidate.
+
 ### Task 6: Build a reproducible versioned candidate and evidence gate
+
+**Prerequisite:** Task 5a has no unresolved release-blocking documentation or agent-file findings.
 
 **Files:** Modify `Directory.Build.props`, `addon/Fusion360MCP/Fusion360MCP.manifest`, `scripts/publish.sh` only if server archives differ between builds, `.github/workflows/ci.yml`, `.github/workflows/release.yml`, `.github/workflows/docker.yml`; create scripts/check_release_evidence.py and tests/python_addin/test_release_evidence.py.
 
