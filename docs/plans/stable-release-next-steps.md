@@ -145,7 +145,7 @@
 
 **Files:** `.github/workflows/release.yml`, `.github/workflows/docker.yml`, `docs/STATUS.md`, release notes. Changes only if verification exposes a concrete mismatch.
 
-**Interfaces:** A `v<version>` tag points to the final evidence commit; its tested candidate source commit is an ancestor with documentation-only changes afterward. Release assets and the versioned Docker image build from the tagged tree and must match the tested artifact hashes. The evidence checker rejects incomplete or mismatched records before a publish job.
+**Interfaces:** A `v<version>` tag points to the final evidence commit; its tested candidate source commit is an ancestor, with only documentation and the release/Docker packaging workflows allowed to change afterward. Release assets are staged from the immutable tested candidate Actions artifact; the versioned Docker image builds from the tagged tree. The evidence checker rejects incomplete or mismatched records before publication.
 
 - [ ] **Step 1: Verify the final source and CI.** Run all required CI jobs on the commit intended for the tag. Check that the evidence checker passes, the source commit is an ancestor with only documentation changes after it, and notes list tested Fusion versions, limits, and upgrade steps.
 - [x] **Step 2: Review and authorize the publication action.** Version `1.0.0` matches `Directory.Build.props`; the release workflow attaches server archives, Python zip, checksums and generated notes, while the Docker workflow builds the versioned image from the same tag SHA. Project owner authorized publishing `1.0.0` with the documented E2E deferrals.

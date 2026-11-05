@@ -57,7 +57,7 @@ jobs:
           source=$(sed -n 's/^Candidate source commit: //p' docs/status/e2e-stable-release.md)
           test -n "$source"
           git merge-base --is-ancestor "$source" "$GITHUB_SHA"
-          unexpected=$(git diff --name-only "$source" "$GITHUB_SHA" -- . ':!docs/**' ':!README.md')
+          unexpected=$(git diff --name-only "$source" "$GITHUB_SHA" -- . ':!docs/**' ':!README.md' ':!.github/workflows/release.yml' ':!.github/workflows/docker.yml')
           test -z "$unexpected"
           python scripts/package_addin.py
           python scripts/check_release_evidence.py \

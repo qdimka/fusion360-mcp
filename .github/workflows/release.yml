@@ -6,6 +6,7 @@ on:
       - 'v*'
 
 permissions:
+  actions: read
   contents: write
 
 jobs:
@@ -73,7 +74,7 @@ jobs:
           source=$(sed -n 's/^Candidate source commit: //p' docs/status/e2e-stable-release.md)
           test -n "$source"
           git merge-base --is-ancestor "$source" "$GITHUB_SHA"
-          unexpected=$(git diff --name-only "$source" "$GITHUB_SHA" -- . ':!docs/**' ':!README.md')
+          unexpected=$(git diff --name-only "$source" "$GITHUB_SHA" -- . ':!docs/**' ':!README.md' ':!.github/workflows/release.yml' ':!.github/workflows/docker.yml')
           test -z "$unexpected"
       - name: Build and test
         run: |
@@ -85,8 +86,20 @@ jobs:
           python -m unittest discover -s tests/python_addin -v
           python scripts/check_tool_parity.py
           python scripts/check_guards.py
-      - name: Package server and Python add-in
-        run: bash scripts/publish.sh
+      - name: Download the tested candidate artifacts
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: 13391261132
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: qdimka/fusion360-mcp
+          run-id: 41974563658
+          path: candidate-artifacts
+      - name: Stage and verify the immutable candidate archives
+        run: |
+          mkdir -p dist
+          cp candidate-artifacts/*.zip dist/
+          cp candidate-artifacts/SHA256SUMS dist/
+          (cd dist && sha256sum -c SHA256SUMS)
       - name: Verify tested add-in package hash
         run: |
           version=$(sed -n 's:.*<Version>\([^<]*\)</Version>.*:\1:p' Directory.Build.props | head -n 1)

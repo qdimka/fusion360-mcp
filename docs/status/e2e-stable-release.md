@@ -8,6 +8,7 @@ Candidate source commit: bca69cbb3a16f4eaee09272d4e39e233ac53e8ab
 Add-in SHA256: 933f91f46add9c21dfa14f0c89044be6f7302d120504a940b0651a4e06d100e7
 Server win-x64 SHA256: f2b73742f4e078e8c11280d322867732133add439d612ab10df8a7bfd825ec4d
 Server osx-arm64 SHA256: 93ed14b637df69ecf5eef77a62e1c9e655a7c84325d9d001ed5264ca6c50e4a3
+Candidate Actions artifact ID: 13391261132 (run 41974563658)
 
 Windows Fusion E2E has not been run because a Windows Fusion host is currently
 unavailable. Per the release decision, this live matrix is deferred until after
@@ -277,6 +278,16 @@ server archive `87305ad6563396190d13986b6ee5864c6b0db69f1317b97dbaa1b2cf71145b61
 and add-in archive `933f91f46add9c21dfa14f0c89044be6f7302d120504a940b0651a4e06d100e7`.
 The macOS-host server archive differs from the Ubuntu-host archive; use the
 tested Ubuntu Actions archive for the candidate record.
+
+The release workflow publishes the immutable candidate archives from Actions
+artifact `13391261132` rather than rebuilding server archives from the later
+documentation-only release commit. A first release attempt rebuilt `win-x64`
+with SHA-256 `509736a290bdc9a2648a68f244b9d665f2802567d5e63c1e2528a926afb2cdff`
+instead of the tested candidate hash and correctly stopped before asset
+publication. The release workflow now downloads and checksum-verifies the
+original candidate artifact. Only documentation and release packaging workflow
+files may differ after the tested source commit; product source remains
+unchanged.
 
 On macOS 15.7.4 with Fusion 2706.1.17, the Python add-in was installed from the
 Actions ZIP and its handler SHA-256 (`bd7ea3306af7282db76ca86d6587f536c697c974b810364b12caaad04dae976a`)
