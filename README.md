@@ -34,10 +34,10 @@ The project has two components:
 
 ### Agent-assisted installation
 
-An AI coding agent can perform the installation after you provide access to this repository and the MCP client configuration. Give the agent this task:
+An AI coding agent can perform the installation after you provide access to this repository and the MCP client configuration. If the agent needs to fetch the project, use the canonical repository: [qdimka/fusion360-mcp](https://github.com/qdimka/fusion360-mcp). Give the agent this task:
 
 ```text
-Install the Fusion360 MCP server from this [installation instruction](docs/INSTALL.md).
+Clone https://github.com/qdimka/fusion360-mcp if the repository is not already available. Install the Fusion360 MCP server by following docs/INSTALL.md from the repository root.
 ```
 
 The same instructions are available locally in [`docs/INSTALL.md`](docs/INSTALL.md).

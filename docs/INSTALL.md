@@ -2,6 +2,11 @@
 
 Use these steps when an AI coding agent installs the server for you.
 
+If this repository is not already available locally, clone
+[`qdimka/fusion360-mcp`](https://github.com/qdimka/fusion360-mcp), then run the
+source installation commands from the repository root. The release download
+option below does not require a source checkout.
+
 ## Prerequisites
 
 - Fusion 360 on Windows or macOS. Windows installer CI is required before
