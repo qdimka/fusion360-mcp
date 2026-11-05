@@ -86,11 +86,11 @@ jobs:
           }
           $failed = $false
           try { & $installer } catch { $failed = $true }
-          Remove-Item Function:global:Move-Item
+          Remove-Item Function:\global:Move-Item -Force -ErrorAction SilentlyContinue
           if (-not $failed -or -not $global:promotionInjected) { throw 'Promotion failure was not exercised' }
-          Remove-Variable promotionInjected -Scope Global
           Assert-Original
           & $installer
+          Remove-Variable promotionInjected -Scope Global
           if (-not (Test-Path (Join-Path $env:FUSION_MCP_ADDINS_DIR 'Fusion360MCP/server/command_handler.py'))) {
             throw 'Python add-in installation is incomplete'
           }
