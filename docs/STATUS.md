@@ -1,11 +1,13 @@
 # Project status
 
-Updated 2026-11-05. Release `1.0.0` is approved for publication from the exact
-candidate recorded in [live E2E evidence](status/e2e-stable-release.md). The
+Updated 2026-11-05. Release [`1.0.0`](https://github.com/qdimka/fusion360-mcp/releases/tag/v1.0.0)
+is published from the exact candidate recorded in [live E2E evidence](status/e2e-stable-release.md).
+Release workflow [41990825490](https://github.com/qdimka/fusion360-mcp/actions/runs/41990825490)
+and tagged Docker workflow [41990825462](https://github.com/qdimka/fusion360-mcp/actions/runs/41990825462)
+passed; downloaded release archives match `SHA256SUMS` and the candidate hashes. The
 owner approved deferring the trusted-network opt-in check and remaining
 catalog/runbook rows until the next release; Windows Fusion E2E remains a
-post-release follow-up. The release workflow must pass before calling the
-release published. The current version is `1.0.0` in `Directory.Build.props`.
+post-release follow-up. The current version is `1.0.0` in `Directory.Build.props`.
 The C# MCP server exposes 92 tools. A pinned Python
 Fusion add-in and installers for Windows and macOS are committed in `1750af1` as
 a release candidate. The Python add-in is the only Fusion add-in in the source

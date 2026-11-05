@@ -139,7 +139,7 @@
 - [x] **Step 1: Record the Windows deferral.** `Windows: deferred (post-release)` is recorded; schedule the complete runbook on the published candidate for the first available Windows Fusion host.
 - [x] **Step 2: Run the agreed release scope from the [runbook](../E2E-STATUS.md) on macOS** with the Task 6 candidate and server archive. The exact-candidate evidence records geometry, component, sheet/body, parameter, surface, export, render, successful `flat_pattern`, revision conflict, idempotent replay and restart replay. The project owner explicitly deferred trusted network opt-in and remaining catalog/runbook rows to the next release; they are not claimed as tested in the evidence.
 - [x] **Step 3: Rerun after a defect.** No candidate source or packaged-file defect was found, so no new candidate cycle was needed. The invalid `create_flange` call was a malformed test request; scene inspection confirmed no model change.
-- [ ] **Step 4: Complete the evidence record.** Add `Candidate source commit`, `Candidate version`, `Add-in SHA256`, `Server win-x64 SHA256`, and the tested `Server osx-<rid> SHA256` to `docs/status/e2e-stable-release.md`; set `Status: pass` for publication when macOS and release gates pass and Windows is explicitly deferred. Run scripts/check_release_evidence.py against the built archives, then commit evidence and documentation. Keep the recorded source commit unchanged when the evidence commit changes only docs.
+- [x] **Step 4: Complete the evidence record.** Recorded the candidate source/version and exact archive SHA-256 values in `docs/status/e2e-stable-release.md`, with the owner-approved deferrals. The release workflow checked the immutable Actions candidate archives against the evidence; published assets were downloaded and verified against `SHA256SUMS`. The recorded product source commit remains unchanged.
 
 ### Task 8: Verify release publication
 
@@ -147,9 +147,9 @@
 
 **Interfaces:** A `v<version>` tag points to the final evidence commit; its tested candidate source commit is an ancestor, with only documentation and the release/Docker packaging workflows allowed to change afterward. Release assets are staged from the immutable tested candidate Actions artifact; the versioned Docker image builds from the tagged tree. The evidence checker rejects incomplete or mismatched records before publication.
 
-- [ ] **Step 1: Verify the final source and CI.** Run all required CI jobs on the commit intended for the tag. Check that the evidence checker passes, the source commit is an ancestor with only documentation changes after it, and notes list tested Fusion versions, limits, and upgrade steps.
+- [x] **Step 1: Verify the final source and CI.** The tag run passed its build/test and Windows/macOS installer jobs, evidence checks and archive hashes. The candidate source is an ancestor of the tag; only docs and the approved release/Docker packaging workflows changed afterward.
 - [x] **Step 2: Review and authorize the publication action.** Version `1.0.0` matches `Directory.Build.props`; the release workflow attaches server archives, Python zip, checksums and generated notes, while the Docker workflow builds the versioned image from the same tag SHA. Project owner authorized publishing `1.0.0` with the documented E2E deferrals.
-- [ ] **Step 3: Tag and verify.** Push the approved `v<version>` tag; require both versioned workflows to pass. Download each release asset, verify `SHA256SUMS`, compare the add-in/server hashes with the final E2E record, and inspect the Docker image source revision. Record release URL and workflow runs in `docs/STATUS.md`.
+- [x] **Step 3: Tag and verify.** Published `v1.0.0`; release workflow [41990825490](https://github.com/qdimka/fusion360-mcp/actions/runs/41990825490) and Docker workflow [41990825462](https://github.com/qdimka/fusion360-mcp/actions/runs/41990825462) passed. Downloaded all five ZIPs and `SHA256SUMS`; every digest matched, including tested Windows, macOS arm64 and Python hashes. Release URL and workflow runs are recorded in `docs/STATUS.md`.
 
 ## Completion rule
 
