@@ -75,11 +75,11 @@ jobs:
           try { & (Join-Path $invalid 'install-addon.ps1') } catch { $failed = $true }
           if (-not $failed) { throw 'Invalid manifest was accepted' }
           Assert-Original
-          $script:injected = $false
+          $global:promotionInjected = $false
           function global:Move-Item {
             param($Path, $Destination)
-            if (-not $script:injected -and $Path -like '*Fusion360MCP-stage-*\Fusion360MCP') {
-              $script:injected = $true
+            if (-not $global:promotionInjected -and $Path -like '*Fusion360MCP-stage-*\Fusion360MCP') {
+              $global:promotionInjected = $true
               throw 'Injected promotion failure'
             }
             Microsoft.PowerShell.Management\Move-Item -Path $Path -Destination $Destination
@@ -87,7 +87,8 @@ jobs:
           $failed = $false
           try { & $installer } catch { $failed = $true }
           Remove-Item Function:global:Move-Item
-          if (-not $failed -or -not $script:injected) { throw 'Promotion failure was not exercised' }
+          if (-not $failed -or -not $global:promotionInjected) { throw 'Promotion failure was not exercised' }
+          Remove-Variable promotionInjected -Scope Global
           Assert-Original
           & $installer
           if (-not (Test-Path (Join-Path $env:FUSION_MCP_ADDINS_DIR 'Fusion360MCP/server/command_handler.py'))) {
