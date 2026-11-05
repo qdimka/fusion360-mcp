@@ -32,7 +32,18 @@ try {
         Copy-Item -Path $Source -Destination $Staged -Recurse
     }
     $ManifestPath = Join-Path $Staged 'Fusion360MCP.manifest'
-    $Manifest = Get-Content -Raw $ManifestPath | ConvertFrom-Json
+    $ManifestJson = Get-Content -Raw $ManifestPath
+    $JsonCommand = Get-Command ConvertFrom-Json
+    if ($JsonCommand.Parameters.ContainsKey('AsHashtable')) {
+        # PowerShell 7 rejects valid JSON properties with an empty name unless
+        # it creates a hashtable. Autodesk manifests use description[""] as
+        # the default locale, so retain that valid key while checking fields.
+        $Manifest = $ManifestJson | ConvertFrom-Json -AsHashtable
+    } else {
+        # Windows PowerShell 5.1 predates -AsHashtable and accepts the manifest
+        # through its PSCustomObject conversion path.
+        $Manifest = $ManifestJson | ConvertFrom-Json
+    }
     if ($Manifest.autodeskProduct -ne 'Fusion360' -or $Manifest.type -ne 'addin' -or
         $Manifest.supportedOS -ne 'windows|mac' -or
         -not (Test-Path (Join-Path $Staged 'Fusion360MCP.py'))) {
