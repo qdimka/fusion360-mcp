@@ -97,8 +97,8 @@ jobs:
       - name: Stage and verify the immutable candidate archives
         run: |
           mkdir -p dist
-          cp candidate-artifacts/*.zip dist/
-          cp candidate-artifacts/SHA256SUMS dist/
+          cp candidate-artifacts/stable-release-candidate/*.zip dist/
+          cp candidate-artifacts/stable-release-candidate/SHA256SUMS dist/
           (cd dist && sha256sum -c SHA256SUMS)
       - name: Verify tested add-in package hash
         run: |
