@@ -24,3 +24,12 @@ The former C# add-in has been removed from the source tree, solution, CI build,
 and distribution. Windows Fusion E2E is deferred until after release because a
 Windows Fusion host is unavailable; Windows installer CI remains a pre-release
 gate.
+
+## Installer runner verification — 2026-11-05
+
+The `main` CI run at commit `fe3f5c82` passed `build-test`,
+`python-windows-install` (Windows Server 2025), and `python-macos-install`:
+[GitHub Actions run 41974231569](https://github.com/qdimka/fusion360-mcp/actions/runs/41974231569).
+The Windows job covered install, rejection of an invalid manifest, rollback
+after an injected promotion failure, and reinstall. This is installer CI
+evidence only; Windows Fusion E2E remains deferred until after release.

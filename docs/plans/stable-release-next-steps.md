@@ -73,10 +73,10 @@
 
 **Interfaces:** Both installers read `FUSION_MCP_ADDINS_DIR`; the installed package is `<AddIns>/Fusion360MCP`. A rejected package must leave the prior `Fusion360MCP.py` and manifest byte-identical.
 
-- [ ] **Step 1: Add the Windows check.** In `python-windows-install`, after the first install, record SHA-256 of the installed `Fusion360MCP.py` and manifest. First run an invalid-manifest package and assert failure with identical hashes. Then inject a one-time failure in the PowerShell `Move-Item` call that promotes the staged package after the old target moved to backup; assert the old target is restored with the same hashes. Rerun the valid installer and check the installed handler file.
-- [ ] **Step 2: Add the macOS check.** In `python-macos-install`, after the first install, record both hashes. First run a package whose `supportedOS` is invalid and assert failure with identical hashes. Then put a temporary `mv` shim first in `PATH` that fails only when promoting `.Fusion360MCP-stage.*` to the target, after the old target has moved to backup; assert the rollback restores the old target and hashes. Rerun the valid installer.
+- [x] **Step 1: Add the Windows check.** `python-windows-install` records SHA-256 for the installed handler and manifest, rejects an invalid manifest, verifies rollback after an injected `Move-Item` promotion failure, and reruns the valid installer. Windows CI passes.
+- [x] **Step 2: Add the macOS check.** `python-macos-install` records both hashes, rejects an invalid `supportedOS`, verifies rollback after an injected `mv` promotion failure, and reruns the valid installer. macOS CI passes.
 - [ ] **Step 3: Verify locally where available.** Run the macOS check using a temporary `FUSION_MCP_ADDINS_DIR` and extracted release zip. Run `python3.12 -m unittest discover -s tests/python_addin -v` and `python3.12 scripts/check_guards.py`; require zero failures.
-- [ ] **Step 4: Verify on runners and commit.** A branch/PR run of `.github/workflows/ci.yml` must show `build-test`, `python-windows-install`, and `python-macos-install` passing. Record run URLs in `docs/status/python-addin-compatibility.md`. Commit the workflow and evidence; do not treat runner installation as live Fusion validation.
+- [x] **Step 4: Verify on runners and commit.** The `main` run [41974231569](https://github.com/qdimka/fusion360-mcp/actions/runs/41974231569) passed `build-test`, `python-windows-install`, and `python-macos-install`. Its URL and scope are recorded in `docs/status/python-addin-compatibility.md`; installer CI is not live Fusion validation.
 
 ### Task 4: Preliminary Fusion compatibility on macOS; Windows deferred until after release
 
